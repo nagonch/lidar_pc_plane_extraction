@@ -1,4 +1,3 @@
-from ..dataset import KittiDataset
 import numpy as np
 import numba as nb
 from torch.utils.data import Dataset
@@ -116,8 +115,8 @@ def collate_fn_BEV(data): # stack alone batch dimension
         'pt_fea': xyz,
     }
 
-def build_dataloader(filenames, scene_size, grid_size=[480, 360, 32], n_classes=2, batch_size=2):
-    train_pt_dataset = KittiDataset(filenames, scene_size=scene_size, n_classes=n_classes)
+def build_dataloader(filenames, dataset_base, scene_size, grid_size=[480, 360, 32], n_classes=2, batch_size=2):
+    train_pt_dataset = dataset_base(filenames, scene_size=scene_size, n_classes=n_classes)
     s_dataset = spherical_dataset(train_pt_dataset, grid_size)
     train_dataset_loader = torch.utils.data.DataLoader(
         dataset = s_dataset,
