@@ -38,7 +38,7 @@ def train(
     for step in range(n_steps):
         with tqdm(train_loader, unit="step") as tepoch:
             for i, train_batch in enumerate(tepoch):
-                tepoch.set_description(f"Step {step}")
+                tepoch.set_description(f"Step {step} / {n_steps}")
                 optimizer.zero_grad()
                 output_scores = model(train_batch)
                 target = torch.stack(train_batch['pt_labs'])
@@ -78,7 +78,7 @@ def val(
         targets.append(target)
         preds.append(output_scores)
     
-    return preds, targets
+    return torch.stack(preds), torch.stack(targets)
 
 
 if __name__=='__main__':

@@ -2,17 +2,14 @@ from torch.utils.data import Dataset
 import torch
 import numpy as np
 import numba as nb
-from classes_functions import (
-    CLASS_MAP,
-)
+
 
 def get_map(x):
-    # return CLASS_MAP.get(x, 0)
     class_map = {40: 2}
     return class_map.get(x, 0)
 
 class KittiDataset(Dataset):
-    def __init__(self, filenames, class_map=CLASS_MAP,
+    def __init__(self, filenames,
                  scene_size=5000):
         self.scene_size = scene_size
         self.map_classes = np.vectorize(
@@ -21,11 +18,13 @@ class KittiDataset(Dataset):
         self.filenames = filenames
 
     
-    def read_labels(self, filename, filename_manual):
-        labels_kitti = (np.fromfile(filename, dtype=np.int32) & 0xFFFF).reshape((-1, 1)).astype(np.uint8)
-        labels_kitti = self.map_classes(labels_kitti)[:, 0]
-        labels_manual = np.load(filename_manual)
-        result_labels = np.clip(labels_kitti + labels_manual, 0, 2).astype(np.uint8)
+    def read_labels(self, filename, filename_manual, drop_road=False):
+        labels_road = (np.fromfile(filename, dtype=np.int32) & 0xFFFF).reshape((-1, 1)).astype(np.uint8)
+        labels_road = self.map_classes(labels_road)[:, 0]
+        labels_plane = np.load(filename_manual)
+
+        result_labels = np.clip(labels_road + labels_plane, 0, int(drop_road) + 1).astype(np.uint8)
+
         return torch.from_numpy(result_labels[None].T)
     
     def read_scene(self, filename):
