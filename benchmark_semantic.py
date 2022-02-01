@@ -72,17 +72,19 @@ def val(
     val_loader: torch.utils.data.DataLoader,
     model: Any,
 ):
-    preds = []
-    targets = []
-    for val_batch in tqdm(val_loader):
-        output_scores = model(val_batch)
-        target = torch.stack(val_batch['pt_labs'])
-        target = torch.squeeze(target, -1).type(torch.LongTensor).to(device)
-        targets.append(target)
-        preds.append(output_scores)
-        torch.cuda.empty_cache()
-    
-    return torch.stack(preds), torch.stack(targets)
+    with torch.no_grad():
+        preds = []
+        targets = []
+        
+        for val_batch in tqdm(val_loader):
+            output_scores = model(val_batch)
+            target = torch.stack(val_batch['pt_labs'])
+            target = torch.squeeze(target, -1).type(torch.LongTensor).to(device)
+            targets.append(target)
+            preds.append(output_scores)
+            torch.cuda.empty_cache()
+        
+        return torch.stack(preds), torch.stack(targets)
 
 
 if __name__=='__main__':
