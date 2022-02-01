@@ -84,7 +84,6 @@ def val(
             targets.append(target)
             preds.append(torch.max(output_scores, -1)[0])
             torch.cuda.empty_cache()
-            break
         
         return torch.stack(preds), torch.stack(targets)
 
