@@ -1,14 +1,12 @@
 python -m .benchmark_semantic.py \
---dataset 'kitti' \
---model-name 'dsnet' \
 --batch-size 2 \
 --n-steps 500 \
 --n-classes 2 \
 --train-size 0.75 \
 --device-name 'cuda:0' \
 --scene-size 120000 \
+--model-state-path '/mnt/vol0/datasets/plane_extraction_model_states/selected_models/dsnet_semantic_full_kitti.pth' \
 --dataset 'kitti' \
 --model-name 'dsnet' \
---model-state-path '/mnt/vol0/datasets/plane_extraction_model_states/selected_models/dsnet_semantic_full_kitti.pth' \
 --train \
 --val
