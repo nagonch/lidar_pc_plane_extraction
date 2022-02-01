@@ -8,6 +8,7 @@ from model_hub import get_model
 import wandb
 from torch.optim.lr_scheduler import ExponentialLR
 from tqdm import tqdm
+from metrics.semantic import plot_metrics
 
 
 TRAIN_TS = int(time())
@@ -61,6 +62,8 @@ def train(
                 'loss': pred_error,
             }, model_save_path.format(TRAIN_TS),
         )
+    print("Training done")
+    print(f"State saved at {model_save_path.format(TRAIN_TS)}")
     return model
 
 
@@ -129,3 +132,4 @@ if __name__=='__main__':
             val_loader,
             model,
         )
+        plot_metrics(preds, targets)
