@@ -7,7 +7,7 @@ import torch.distributed as dist
 import subprocess
 import pickle
 from scipy import stats as s
-from evaluate_panoptic import class_inv_lut
+from .evaluate_panoptic import class_inv_lut
 
 def SemKITTI2train_single(label):
     return label - 1 # uint8 trick: 0 - 1 = 255

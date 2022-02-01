@@ -19,7 +19,7 @@ def polar2cat(input_xyz_polar):
 
 @nb.jit('u1[:,:,:](u1[:,:,:],i8[:,:])',nopython=True,cache=True,parallel = False)
 def nb_process_label(processed_label,sorted_label_voxel_pair):
-    label_size = 256.
+    label_size = 256
     counter = np.zeros((label_size,),dtype = np.uint16)
     counter[sorted_label_voxel_pair[0,3]] = 1
     cur_sear_ind = sorted_label_voxel_pair[0,:3]

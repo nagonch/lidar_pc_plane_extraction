@@ -1,11 +1,11 @@
 import yaml
 import numpy as np
-from eval_np import PanopticEval
-from config import global_cfg
+from .eval_np import PanopticEval
+from .config import global_cfg
 need_nuscenes_remap = False
 
 if global_cfg.DATA_CONFIG.DATASET_NAME == 'SemanticKitti':
-    DATA = yaml.safe_load(open('semantic-kitti.yaml', 'r'))
+    DATA = yaml.safe_load(open('ds_net/modules/semantic-kitti.yaml', 'r'))
     # get number of interest classes, and the label mappings
     class_remap = DATA["learning_map"]
     class_inv_remap = DATA["learning_map_inv"]

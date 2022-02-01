@@ -92,13 +92,13 @@ cfg.LOCAL_RANK = 0
 
 
 def parse_config():
-    config = 'backbone_cfg.yaml'
+    config = 'ds_net/modules/backbone_cfg.yaml'
     cfg_from_yaml_file(config, cfg)
     return cfg
 
 class GlobalArgs():
     def __init__(self):
-        self.config = 'backbone_cfg.yaml'
+        self.config = 'ds_net/modules/backbone_cfg.yaml'
         self.ckpt_name = 'PolarOffset.pth'
         self.launcher = None
         self.batch_size = 1

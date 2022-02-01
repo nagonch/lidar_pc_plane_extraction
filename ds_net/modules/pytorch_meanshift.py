@@ -8,9 +8,9 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 from torch_cluster import fps
-from instance_losses import pairwise_distance
+from .instance_losses import pairwise_distance
 from sklearn.neighbors import NearestNeighbors
-from common_utils import safe_vis
+from .common_utils import safe_vis
 
 class PytorchMeanshift(nn.Module):
     def __init__(self, cfg, loss_fn, cluster_fn):

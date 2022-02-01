@@ -74,7 +74,7 @@ if __name__=='__main__':
     parser.add_argument('--scene-size', type=int, default=120000)
     parser.add_argument('--dataset', type=str, choices=['kitti', 'carla', 'both'], required=True)
     parser.add_argument('--model-name', type=str, choices=['dsnet'], required=True)
-    parser.add_argument('--model-state-path', type=str, required=True)
+    parser.add_argument('--model-state-path', type=str)
     parser.add_argument('--train', type=bool, default=False)
     parser.add_argument('--val', type=bool, default=False)
     args = parser.parse_args()

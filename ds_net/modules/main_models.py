@@ -3,16 +3,16 @@
 # @file: model_zoo.py
 # @time: 2020/09/26 17:05
 
-import BEV_Unet
-import PointNet
-import spconv_unet
-import pytorch_meanshift
-import instance_losses
-import lovasz_losses
-from evaluate_panoptic import eval_one_scan_w_fname, valid_xentropy_ids
-import clustering
-import common_utils
-from common_utils import grp_range_torch, parallel_FPS, SemKITTI2train
+from . import BEV_Unet
+from . import PointNet
+from . import spconv_unet
+from . import pytorch_meanshift
+from . import instance_losses
+from . import lovasz_losses
+from .evaluate_panoptic import eval_one_scan_w_fname, valid_xentropy_ids
+from . import clustering
+from . import common_utils
+from .common_utils import grp_range_torch, parallel_FPS, SemKITTI2train
 
 import torch
 import torch.nn as nn
@@ -20,7 +20,7 @@ import torch.nn.functional as F
 import torch_scatter
 import numpy as np
 import multiprocessing
-import common_utils
+from . import common_utils
 
 class PolarBaseClass(nn.Module):
     def __init__(self, cfg):

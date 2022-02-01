@@ -1,9 +1,9 @@
 import torch
-from modules import PointNet
-from modules.main_models import PolarOffset
-from modules import spconv_unet
-from modules.config import global_cfg
-from modules.train_utils import load_pretrained_model
+from .modules import PointNet
+from .modules.main_models import PolarOffset
+from .modules import spconv_unet
+from .modules.config import global_cfg
+from .modules.train_utils import load_pretrained_model
 
 global_cfg.DIST_TRAIN = None
 
@@ -32,7 +32,8 @@ def build_model(device_name, model_state_path, n_classes):
     device = torch.device(device_name)
     global_cfg.DATA_CONFIG.NCLASS = n_classes
     model = PolarOffsetSpconv(global_cfg).to(device)
-    load_pretrained_model(model, model_state_path)
+    if model_state_path:
+        load_pretrained_model(model, model_state_path)
     model = model.cuda()
 
     return model
