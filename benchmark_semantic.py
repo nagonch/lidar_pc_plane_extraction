@@ -125,7 +125,6 @@ if __name__=='__main__':
         )
     if args.val:
         preds, targets = val(
-            args.batch_size,
             device,
             val_loader,
             model,
