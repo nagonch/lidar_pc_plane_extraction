@@ -23,6 +23,7 @@ def train(
     train_loader: torch.utils.data.DataLoader = None,
     model: Any = None,
 ):
+    wandb.init(project="untitled_plane_extraction", entity="nagonch")
     wandb.config = {
         "learning_rate": lr,
         "epochs": n_steps,
