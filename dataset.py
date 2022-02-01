@@ -60,17 +60,16 @@ def get_kitti_filepaths(
     scenes = []
     manual_labels = []
     for drive in drives:
-        folder_scenes = [scenes_path.format(drive) + '/' + scene for scene in os.listdir(scenes_path.format(drive))]
-        folder_labels = [labels_original.format(drive) + '/' + scene.split("/")[-1].replace('.bin', '.label') for scene in folder_scenes]
-        folder_manual_labels = [labels_manual.format(drive) + '/' + scene.split("/")[-1].replace('.bin', '.npy') for scene in folder_scenes]
+        folder_manual_labels = [labels_manual.format(drive) + '/' + scene for scene in os.listdir(labels_manual.format(drive))]
+        folder_scenes = [scenes_path.format(drive) + '/' + scene.split("/")[-1].replace('.npy', '.bin') for scene in folder_manual_labels]
+        folder_labels = [labels_original.format(drive) + '/' + scene.split("/")[-1].replace('.npy', '.label') for scene in folder_manual_labels]
         labels.append(folder_labels)
         scenes.append(folder_scenes)
         manual_labels.append(folder_manual_labels)
     
     manual_labels = [label for folder in manual_labels for label in folder]
-    n_manual_labels = len(manual_labels)
-    labels = [label for folder in labels for label in folder][:n_manual_labels]
-    scenes = [scene for folder in scenes for scene in folder][:n_manual_labels]
+    labels = [label for folder in labels for label in folder]
+    scenes = [scene for folder in scenes for scene in folder]
     
     result = []
     for scene, label, manual_label in zip(scenes, labels, manual_labels):

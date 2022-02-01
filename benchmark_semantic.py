@@ -82,6 +82,7 @@ if __name__=='__main__':
     log_args(args)
 
     train_path, val_path = get_filepaths(args.dataset, args.train_size)
+    print(train_path)
     device = torch.device(args.device_name)
     model, train_loader, val_loader = get_model(
         args.model_name,
