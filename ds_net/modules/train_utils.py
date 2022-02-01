@@ -42,7 +42,9 @@ def load_pretrained_model(model, filename, to_cpu=False):
     checkpoint = torch.load(filename, map_location=loc_type)
     if checkpoint.get('model_state', None) is not None:
         checkpoint = checkpoint.get('model_state')
-
+    elif checkpoint.get('model_statue_dict', None) is not None:
+        checkpoint = checkpoint.get('model_statue_dict') # don't ask
+        
     update_model_state = {}
     for key, val in checkpoint.items():
         match_key = find_match_key(key, model.state_dict())
