@@ -2,7 +2,6 @@ from sklearn import metrics
 import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-import torch
 
 
 def process_cm(cm):
@@ -61,8 +60,8 @@ def calculate_metrics(preds, targets, threshold_steps=200):
     )
 
 def plot_metrics(preds, targets, threshold_steps=200):
-    preds = torch.stack(preds).view(-1).cpu().detach().numpy()
-    targets = torch.stack(targets).view(-1).cpu().detach().numpy()
+    preds = preds.view(-1).cpu().detach().numpy()
+    targets = targets.view(-1).cpu().detach().numpy()
     (
         recalls,
         precisions,
@@ -74,7 +73,7 @@ def plot_metrics(preds, targets, threshold_steps=200):
         fprs_no_road,
         tprs_no_road,
         auc_no_road,
-    ) = calculate_metrics(preds, targets)
+    ) = calculate_metrics(preds, targets, threshold_steps=threshold_steps)
 
     plt.plot(fprs, tprs, label=f"AUC = {np.round(auc, 2)}")
     plt.xlim([0.0, 1.0])
