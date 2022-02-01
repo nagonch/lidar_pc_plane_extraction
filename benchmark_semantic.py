@@ -14,14 +14,14 @@ TRAIN_TS = int(time())
 
 
 def train(
-    batch_size: int = None,
-    lr: float = None,
-    n_steps: int = None,
-    model_save_path: str = None,
-    scene_size: int = None,
-    device: torch.device = None,
-    train_loader: torch.utils.data.DataLoader = None,
-    model: Any = None,
+    batch_size: int,
+    lr: float,
+    n_steps: int,
+    model_save_path: str,
+    scene_size: int,
+    device: torch.device,
+    train_loader: torch.utils.data.DataLoader,
+    model: Any,
 ):
     wandb.init(project="untitled_plane_extraction", entity="nagonch")
     wandb.config = {
@@ -61,6 +61,24 @@ def train(
                 'loss': pred_error,
             }, model_save_path.format(TRAIN_TS),
         )
+    return model
+
+
+def val(
+    device: torch.device,
+    val_loader: torch.utils.data.DataLoader,
+    model: Any,
+):
+    preds = []
+    targets = []
+    for val_batch in tqdm(val_loader):
+        output_scores = model(val_batch)
+        target = torch.stack(val_batch['pt_labs'])
+        target = torch.squeeze(target, -1).type(torch.LongTensor).to(device)
+        targets.append(target)
+        preds.append(output_scores)
+    
+    return preds, targets
 
 
 if __name__=='__main__':
@@ -95,7 +113,7 @@ if __name__=='__main__':
         args.n_classes,
     )
     if args.train:
-        train(
+        model = train(
             args.batch_size,
             args.lr,
             args.n_steps,
@@ -103,5 +121,12 @@ if __name__=='__main__':
             args.scene_size,
             device,
             train_loader,
+            model,
+        )
+    if args.val:
+        preds, targets = val(
+            args.batch_size,
+            device,
+            val_loader,
             model,
         )
