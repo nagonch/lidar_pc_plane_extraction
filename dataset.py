@@ -7,8 +7,9 @@ import numba as nb
 
 class KittiDataset(Dataset):
     def __init__(self, filenames,
-                 scene_size=120000, n_classes=2):
+                 scene_size=120000, n_classes=2, keep_road=False):
         self.scene_size = scene_size
+        self.keep_road = keep_road
         self.map_classes = np.vectorize(
             self.get_map,
         )
@@ -19,12 +20,12 @@ class KittiDataset(Dataset):
         class_map = {40: 2}
         return class_map.get(x, 0)
 
-    def read_labels(self, filename, filename_manual, keep_road=False):
+    def read_labels(self, filename, filename_manual):
         labels_road = (np.fromfile(filename, dtype=np.int32) & 0xFFFF).reshape((-1, 1)).astype(np.uint8)
         labels_road = self.map_classes(labels_road)[:, 0]
         labels_plane = np.load(filename_manual)
 
-        result_labels = np.clip(labels_road + labels_plane, 0, int(keep_road) + 1).astype(np.uint8)
+        result_labels = np.clip(labels_road + labels_plane, 0, int(self.keep_road) + 1).astype(np.uint8)
 
         return torch.from_numpy(result_labels[None].T)
     
