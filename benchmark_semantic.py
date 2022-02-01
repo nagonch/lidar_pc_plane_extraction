@@ -101,6 +101,6 @@ if __name__=='__main__':
             args.model_save_path,
             args.scene_size,
             device,
-            train_path,
+            train_loader,
             model,
         )
