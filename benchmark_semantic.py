@@ -80,6 +80,7 @@ def val(
         target = torch.squeeze(target, -1).type(torch.LongTensor).to(device)
         targets.append(target)
         preds.append(output_scores)
+        torch.cuda.empty_cache()
     
     return torch.stack(preds), torch.stack(targets)
 
