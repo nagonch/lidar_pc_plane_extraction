@@ -55,7 +55,7 @@ def train(
         torch.save(
             {
                 'epoch': step,
-                'model_statue_dict': model.state_dict(),
+                'model_state': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': pred_error,
             }, model_save_path.format(TRAIN_TS),
