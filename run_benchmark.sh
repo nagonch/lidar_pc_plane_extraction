@@ -8,5 +8,4 @@ python benchmark_semantic.py \
 --model-state-path '/mnt/vol0/datasets/plane_extraction_model_states/selected_models/dsnet_semantic_full_kitti.pth' \
 --dataset 'kitti' \
 --model-name 'dsnet' \
---train \
 --val
