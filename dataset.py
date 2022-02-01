@@ -66,10 +66,12 @@ def get_kitti_filepaths(
         labels.append(folder_labels)
         scenes.append(folder_scenes)
         manual_labels.append(folder_manual_labels)
-        
-    labels = [label for folder in labels for label in folder]
-    scenes = [scene for folder in scenes for scene in folder]
+    
     manual_labels = [label for folder in manual_labels for label in folder]
+    n_manual_labels = len(manual_labels)
+    labels = [label for folder in labels for label in folder][:n_manual_labels]
+    scenes = [scene for folder in scenes for scene in folder][:n_manual_labels]
+    
     result = []
     for scene, label, manual_label in zip(scenes, labels, manual_labels):
         result.append([scene, label, manual_label])
