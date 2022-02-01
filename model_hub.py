@@ -26,6 +26,7 @@ def get_model(
             KittiDataset,
             scene_size,
             batch_size=batch_size,
+            keep_road=True,
             n_classes=n_classes,
         )
         model = build_dsnet_semantic(device_name, model_state_path, n_classes)

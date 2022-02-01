@@ -16,17 +16,16 @@ class KittiDataset(Dataset):
         self.filenames = filenames
 
     def get_map(self, x):
-        if self.n_classes == 3:
-            class_map = {40: 2}
-            return class_map.get(x, 0)
-        else:
-            return 0
+        class_map = {40: 2}
+        return class_map.get(x, 0)
 
-    def read_labels(self, filename, filename_manual):
-        labels_kitti = (np.fromfile(filename, dtype=np.int32) & 0xFFFF).reshape((-1, 1)).astype(np.uint8)
-        labels_kitti = self.map_classes(labels_kitti)[:, 0]
-        labels_manual = np.load(filename_manual)
-        result_labels = np.clip(labels_kitti + labels_manual, 0, 2).astype(np.uint8)
+    def read_labels(self, filename, filename_manual, keep_road=False):
+        labels_road = (np.fromfile(filename, dtype=np.int32) & 0xFFFF).reshape((-1, 1)).astype(np.uint8)
+        labels_road = self.map_classes(labels_road)[:, 0]
+        labels_plane = np.load(filename_manual)
+
+        result_labels = np.clip(labels_road + labels_plane, 0, int(keep_road) + 1).astype(np.uint8)
+
         return torch.from_numpy(result_labels[None].T)
     
     def read_scene(self, filename):
