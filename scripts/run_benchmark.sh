@@ -1,4 +1,4 @@
-python benchmark_semantic.py \
+python -m .benchmark_semantic.py \
 --dataset 'kitti' \
 --model-name 'dsnet' \
 --batch-size 2 \
