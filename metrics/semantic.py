@@ -81,6 +81,7 @@ def plot_metrics(preds, targets, threshold_steps=200):
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
     plt.title("Receiver operating characteristic")
+    plt.legend(loc="lower right")
     plt.savefig('val_result/roc.png')
     plt.close()
 
