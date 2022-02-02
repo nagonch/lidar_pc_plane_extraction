@@ -24,8 +24,8 @@ def log_metrics(preds, targets, run_id=RUN_ID):
     
     for drop_class_label in range(3):
         preds = torch.cat(
-            (preds_ref[:, :, :drop_class_label],
-            preds_ref[:, :, drop_class_label + 1:]),
+            (preds_ref[:, :, :, :drop_class_label],
+            preds_ref[:, :, :, drop_class_label + 1:]),
             dim=-1,
         )
         preds = torch.softmax(preds, dim=-1)
