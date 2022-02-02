@@ -17,7 +17,10 @@ class KittiDataset(Dataset):
         self.filenames = filenames
 
     def get_map(self, x):
-        class_map = {40: 2}
+        if self.keep_road:
+            class_map = {40: 2}
+        else:
+            class_map = {40: 1}
         return class_map.get(x, 0)
 
     def read_labels(self, filename, filename_manual):
