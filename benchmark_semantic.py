@@ -90,7 +90,6 @@ def val(
             torch.cuda.empty_cache()
         
         preds = torch.stack(preds)
-        preds_probas = F.softmax(preds, dim=-1)[:, :, :, -1]
         targets = torch.stack(targets)
 
         return preds_probas, targets
