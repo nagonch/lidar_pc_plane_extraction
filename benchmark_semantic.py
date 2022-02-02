@@ -78,11 +78,11 @@ def val(
         targets = []
         
         for val_batch in tqdm(val_loader):
-            output_scores = F.softmax(model(val_batch), dim=-1)
+            output_scores = F.softmax(preds, dim=-1)[:, :, :, -1]
             target = torch.stack(val_batch['pt_labs'])
             target = torch.squeeze(target, -1).type(torch.LongTensor).to(device)
             targets.append(target)
-            preds.append(torch.max(output_scores, -1)[0])
+            preds.append(output_scores)
             torch.cuda.empty_cache()
         
         return torch.stack(preds), torch.stack(targets)
