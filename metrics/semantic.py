@@ -17,12 +17,12 @@ def process_cm(cm):
     return recall, precision, fpr
 
 
-def calculate_metrics(preds, targets, threshold_steps=200):
+def calculate_metrics(preds_probas, targets, threshold_steps=200):
     recalls, precisions, fprs = [], [], []
     recalls_no_road, precisions_no_road, fprs_no_road = [], [], []
     
     for threshold in tqdm(np.linspace(0, 1, threshold_steps)):
-        pred = (preds > threshold).astype(int)
+        pred = (preds_probas > threshold).astype(int)
         drop_indices = (pred == 1) & (targets == 2)
         preds_no_road = pred[~drop_indices]
         targets_no_road = targets[~drop_indices]
@@ -62,8 +62,8 @@ def calculate_metrics(preds, targets, threshold_steps=200):
         auc_no_road,
     )
 
-def plot_metrics(preds, targets, threshold_steps=200):
-    preds = preds.view(-1).cpu().detach().numpy()
+def plot_metrics(preds_probas, targets, threshold_steps=200):
+    preds_probas = preds_probas.view(-1).cpu().detach().numpy()
     targets = targets.view(-1).cpu().detach().numpy()
     (
         recalls,
@@ -76,7 +76,7 @@ def plot_metrics(preds, targets, threshold_steps=200):
         fprs_no_road,
         tprs_no_road,
         auc_no_road,
-    ) = calculate_metrics(preds, targets, threshold_steps=threshold_steps)
+    ) = calculate_metrics(preds_probas, targets, threshold_steps=threshold_steps)
 
     plt.plot(fprs, tprs, label=f"AUC = {np.round(auc, 2)}")
     plt.xlim([0.0, 1.0])

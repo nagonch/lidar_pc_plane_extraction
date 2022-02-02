@@ -135,9 +135,9 @@ if __name__=='__main__':
             model,
         )
     if args.val:
-        preds, targets = val(
+        preds_probas, targets = val(
             device,
             val_loader,
             model,
         )
-        plot_metrics(preds, targets)
+        plot_metrics(preds_probas, targets)
