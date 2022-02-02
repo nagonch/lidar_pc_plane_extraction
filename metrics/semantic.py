@@ -28,6 +28,8 @@ def calculate_metrics(preds, targets, threshold_steps=200):
         targets_no_road = targets[~drop_indices]
         
         targets = np.clip(targets, 0, 1).astype(int)
+        targets_no_road = np.clip(targets_no_road, 0, 1).astype(int)
+        
         cm = metrics.confusion_matrix(targets, pred)
         cm_no_road = metrics.confusion_matrix(targets_no_road, preds_no_road)
         
