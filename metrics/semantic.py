@@ -4,7 +4,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import wandb
 from time import time
-from datetime import datetie
+from datetime import datetime
 
 
 RUN_ID = datetime.fromtimestamp(time()).strftime("%d-%m-%Y--%H-%M")
@@ -125,7 +125,7 @@ def plot_metrics(preds_probas, targets, threshold_steps=200):
         auc_no_road,
     ) = calculate_metrics(preds_probas, targets, threshold_steps=threshold_steps)
 
-    plt.plot(fprs, tprs, label=f"AUC = {np.round(auc, 2)}")
+    plt.plot(fprs, tprs, label=f"AUC = {np.round(auc, 3)}")
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
     plt.xlabel("False Positive Rate")
@@ -135,7 +135,7 @@ def plot_metrics(preds_probas, targets, threshold_steps=200):
     plt.savefig('val_result/roc.png')
     plt.close()
 
-    plt.plot(fprs_no_road, tprs_no_road, label=f"AUC = {np.round(auc_no_road, 2)}")
+    plt.plot(fprs_no_road, tprs_no_road, label=f"AUC = {np.round(auc_no_road, 3)}")
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
     plt.xlabel("False Positive Rate")
