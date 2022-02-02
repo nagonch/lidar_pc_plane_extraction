@@ -25,9 +25,11 @@ def train(
     device: torch.device,
     train_loader: torch.utils.data.DataLoader,
     model: Any,
+    model_name: str,
+    dataset: str,
 ):
-    wandb.init(project="main-project", entity="skoltech-plane-extraction")
-    wandb.run.name = f'train-id-{RUN_ID}'
+    wandb.init(project="train", entity="skoltech-plane-extraction")
+    wandb.run.name = f'{model_name}--{dataset}--{RUN_ID}'
     wandb.config = {
         "learning_rate": lr,
         "epochs": n_steps,
@@ -135,6 +137,8 @@ if __name__=='__main__':
             device,
             train_loader,
             model,
+            args.model_name,
+            args.dataset,
         )
     if args.val:
         preds_probas, targets = val(
@@ -142,4 +146,4 @@ if __name__=='__main__':
             val_loader,
             model,
         )
-        plot_metrics(preds_probas, targets)
+        log_metrics(preds_probas, targets)

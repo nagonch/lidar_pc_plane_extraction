@@ -2,6 +2,12 @@ from sklearn import metrics
 import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import wandb
+from time import time
+from datetime import datetie
+
+
+RUN_ID = datetime.fromtimestamp(time()).strftime("%d-%m-%Y--%H-%M")
 
 
 def process_cm(cm):
@@ -61,6 +67,47 @@ def calculate_metrics(preds_probas, targets, threshold_steps=200):
         tprs_no_road,
         auc_no_road,
     )
+
+
+def log_metrics(preds_probas, targets, threshold_steps=200):
+    wandb.init(project="val", entity="skoltech-plane-extraction")
+    wandb.run.name = f'{RUN_ID}'
+
+    preds_probas = preds_probas.view(-1).cpu().detach().numpy()
+    targets = targets.view(-1).cpu().detach().numpy()
+    (
+        recalls,
+        precisions,
+        fprs,
+        tprs,
+        auc,
+        recalls_no_road,
+        precisions_no_road,
+        fprs_no_road,
+        tprs_no_road,
+        auc_no_road,
+    ) = calculate_metrics(preds_probas, targets, threshold_steps=threshold_steps)
+
+    data = [[x, y] for (x, y) in zip(recalls, precisions)]
+    table = wandb.Table(data=data, columns = ["recall", "precision"])
+    wandb.log({"precision_recall" : wandb.plot.line(table, "recall", "precision",
+            title=f"Precision vs Recall")})
+    
+    data = [[x, y] for (x, y) in zip(fprs, tprs)]
+    table = wandb.Table(data=data, columns = ["fpr", "tpr"])
+    wandb.log({"roc_auc" : wandb.plot.line(table, "fpr", "tpr",
+            title=f"ROC Curve, auc={auc}")})
+    
+    data = [[x, y] for (x, y) in zip(recalls_no_road, precisions_no_road)]
+    table = wandb.Table(data=data, columns = ["recall_no_road", "precision_no_road"])
+    wandb.log({"precision_recall_no_road" : wandb.plot.line(table, "recall_no_road", "precision_no_road",
+            title=f"Precision vs Recall")})
+    
+    data = [[x, y] for (x, y) in zip(fprs_no_road, tprs_no_road)]
+    table = wandb.Table(data=data, columns = ["fpr_no_road", "tpr_no_road"])
+    wandb.log({"roc_auc_no_road" : wandb.plot.line(table, "fpr_no_road", "tpr_no_road",
+            title=f"ROC Curve, auc={auc_no_road}")})
+
 
 def plot_metrics(preds_probas, targets, threshold_steps=200):
     preds_probas = preds_probas.view(-1).cpu().detach().numpy()
