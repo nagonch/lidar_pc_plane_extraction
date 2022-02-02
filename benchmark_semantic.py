@@ -10,9 +10,10 @@ from torch.optim.lr_scheduler import ExponentialLR
 from tqdm import tqdm
 from metrics.semantic import plot_metrics
 import torch.nn.functional as F
+from datetime import datetime
 
 
-TRAIN_TS = int(time())
+RUN_ID = datetime.fromtimestamp(time()).strftime("%d-%m-%Y--%H-%M")
 
 
 def train(
@@ -25,7 +26,8 @@ def train(
     train_loader: torch.utils.data.DataLoader,
     model: Any,
 ):
-    wandb.init(project="untitled_plane_extraction", entity="nagonch")
+    wandb.init(project="main-project", entity="skoltech-plane-extraction")
+    wandb.run.name = f'train-id-{RUN_ID}'
     wandb.config = {
         "learning_rate": lr,
         "epochs": n_steps,
@@ -61,10 +63,10 @@ def train(
                 'model_state': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': pred_error,
-            }, model_save_path.format(TRAIN_TS),
+            }, model_save_path.format(RUN_ID),
         )
     print("Training done")
-    print(f"State saved at {model_save_path.format(TRAIN_TS)}")
+    print(f"State saved at {model_save_path.format(RUN_ID)}")
     return model
 
 
@@ -98,7 +100,7 @@ if __name__=='__main__':
     parser.add_argument('--lr', type=float, default=1e-3)
     parser.add_argument('--n-steps', type=int, default=500)
     parser.add_argument('--n-classes', type=int, default=2)
-    parser.add_argument('--model-save-path', type=str, default=f'/mnt/vol0/datasets/plane_extraction_model_states/saved_models/{TRAIN_TS}.pth')
+    parser.add_argument('--model-save-path', type=str, default=f'/mnt/vol0/datasets/plane_extraction_model_states/saved_models/{RUN_ID}.pth')
     parser.add_argument('--train-size', type=float, default=0.75)
     parser.add_argument('--device-name', type=str, default='cuda:0')
     parser.add_argument('--scene-size', type=int, default=120000)
