@@ -146,4 +146,4 @@ if __name__=='__main__':
             val_loader,
             model,
         )
-        log_metrics(preds_probas, targets)
+        log_metrics(preds_probas, targets, run_id=RUN_ID)

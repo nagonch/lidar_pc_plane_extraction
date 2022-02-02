@@ -9,9 +9,9 @@ import wandb
 RUN_ID = datetime.fromtimestamp(time()).strftime("%d-%m-%Y--%H-%M")
 
 
-def log_curves(preds, targets):
+def log_curves(preds, targets, run_id=RUN_ID):
     wandb.init(project="val", entity="skoltech-plane-extraction")
-    wandb.run.name = f'{RUN_ID}'
+    wandb.run.name = f'{run_id}'
 
     labels = {
         0: {0: "planar", 1:"road"},
