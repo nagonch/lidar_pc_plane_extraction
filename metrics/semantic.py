@@ -40,6 +40,10 @@ def log_metrics(preds, targets, run_id=RUN_ID):
         targets[targets == min(classes_present)] = 0
         targets[targets == max(classes_present)] = 1
 
+        plot_indices = torch.randperm(targets.shape[0])[:10000]
+        targets = targets[plot_indices]
+        preds = preds[plot_indices]
+
         suffix = " vs ".join(labels[drop_class_label].values())
         
         wandb.log({f"pr_curve_{suffix}": wandb.plot.pr_curve(targets, preds,
