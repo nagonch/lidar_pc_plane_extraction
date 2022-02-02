@@ -8,7 +8,7 @@ from model_hub import get_model
 import wandb
 from torch.optim.lr_scheduler import ExponentialLR
 from tqdm import tqdm
-from metrics.semantic import plot_metrics
+from metrics.semantic import log_metrics
 import torch.nn.functional as F
 from datetime import datetime
 
