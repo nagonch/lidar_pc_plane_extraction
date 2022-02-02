@@ -11,3 +11,6 @@
   - **device-name**: string describing train/val device
   - **train**: run training
   - **val**: run validation
+
+### Finding val results
+wanb.ai -> skoltech_plane_extraction -> val -> *run_id*
