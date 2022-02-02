@@ -19,6 +19,7 @@ def get_model(
             KittiDataset,
             scene_size,
             batch_size=batch_size,
+            keep_road=True,
             n_classes=n_classes,
         )
         val_loader = build_dsnet_dataloader(
