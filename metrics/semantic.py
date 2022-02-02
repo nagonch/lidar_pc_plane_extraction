@@ -19,8 +19,8 @@ def log_metrics(preds, targets, run_id=RUN_ID):
         2: {0: "non-planar", 1: "planar"},
     }
     
-    preds_ref = preds
-    targets_ref = targets
+    preds_ref = preds.cpu().detach()
+    targets_ref = targets.cpu().detach()
     
     for drop_class_label in range(3):
         preds = torch.cat(
