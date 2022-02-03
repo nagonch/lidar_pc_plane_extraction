@@ -22,7 +22,7 @@ def log_metrics(preds, targets, run_id=RUN_ID):
     preds_ref = preds.cpu().detach()
     targets_ref = targets.cpu().detach()
     
-    for drop_class_label in range(3):
+    for drop_class_label in range(1, 3):
         preds = torch.cat(
             (preds_ref[:, :, :, :drop_class_label],
             preds_ref[:, :, :, drop_class_label + 1:]),
