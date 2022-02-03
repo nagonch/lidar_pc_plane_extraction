@@ -92,7 +92,7 @@ def val(
         preds = torch.stack(preds)
         targets = torch.stack(targets)
 
-        return preds_probas, targets
+        return preds, targets
 
 
 if __name__=='__main__':
