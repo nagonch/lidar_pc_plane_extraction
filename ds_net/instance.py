@@ -10,9 +10,9 @@ from .meanshift import PytorchMeanshift
 global_cfg.DIST_TRAIN = None
 
 
-class PolarOffsetSpconv(PolarOffset):
+class PolarOffsetSpconvMeanshift(PolarOffset):
     def __init__(self, cfg):
-        super(PolarOffsetSpconv, self).__init__(cfg, need_create_model=False)
+        super(PolarOffsetSpconvMeanshift, self).__init__(cfg, need_create_model=False)
         self.backbone = getattr(spconv_unet, cfg.MODEL.BACKBONE.NAME)(cfg)
         self.sem_head = getattr(spconv_unet, cfg.MODEL.SEM_HEAD.NAME)(cfg)
         self.vfe_model = getattr(PointNet, cfg.MODEL.VFE.NAME)(cfg)
@@ -43,6 +43,13 @@ class PolarOffsetSpconv(PolarOffset):
 
         return ins_id_preds, regressed_centers
 
+def build_model(device_name, model_state_path, n_classes):
+    device = torch.device(device_name)
+    global_cfg.DATA_CONFIG.NCLASS = n_classes
+    model = PolarOffsetSpconvMeanshift(global_cfg).to(device)
+    if model_state_path:
+        load_pretrained_model(model, model_state_path)
+    model = model.cuda()
 
-        
-        
+    return model
+    
