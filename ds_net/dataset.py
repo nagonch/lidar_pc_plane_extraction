@@ -34,6 +34,39 @@ def nb_process_label(processed_label,sorted_label_voxel_pair):
     return processed_label
 
 
+def calc_xyz_middle(xyz):
+    return np.array([
+        (np.max(xyz[:, 0]) + np.min(xyz[:, 0])) / 2.0,
+        (np.max(xyz[:, 1]) + np.min(xyz[:, 1])) / 2.0,
+        (np.max(xyz[:, 2]) + np.min(xyz[:, 2])) / 2.0
+    ], dtype=np.float32)
+
+things_ids = set([1])
+
+
+# @nb.jit #TODO: why jit would lead to offsets all zero?
+def nb_aggregate_pointwise_center_offset(offsets, xyz, ins_labels, center_type):
+    # ins_num = np.max(ins_labels) + 1
+    # for i in range(1, ins_num):
+    for i in np.unique(ins_labels):
+        # if ((i & 0xFFFF0000) >> 16) == 0: #TODO: change to use thing list to filter
+        #     continue
+        if (i & 0xFFFF) not in things_ids:
+            continue
+        i_indices = (ins_labels == i).reshape(-1)
+        xyz_i = xyz[i_indices]
+        if xyz_i.shape[0] <= 0:
+            continue
+        if center_type == 'Axis_center':
+            mean_xyz = calc_xyz_middle(xyz_i)
+        elif center_type == 'Mass_center':
+            mean_xyz = np.mean(xyz_i, axis=0)
+        else:
+            raise NotImplementedError
+        offsets[i_indices] = mean_xyz - xyz_i
+    return offsets
+
+
 class spherical_dataset(Dataset):
   def __init__(self, in_dataset, grid_size, 
                ignore_label = 255, fixed_volume_space = False,
@@ -53,7 +86,10 @@ class spherical_dataset(Dataset):
   def __getitem__(self, index):
         'Generates one sample of data'
         data = self.point_cloud_dataset[index]
-        xyz, labels = data
+        if len(data) == 2:
+            xyz, labels = data
+        if len(data) == 3:
+            xyz, labels, ins_labels = data
         # convert coordinate into polar coordinates
         xyz_pol = cart2polar(xyz)
 
@@ -98,6 +134,11 @@ class spherical_dataset(Dataset):
 
         data_tuple += (grid_ind, labels, return_fea) 
 
+        if len(data) == 3:
+            offsets = np.zeros([xyz.shape[0], 3], dtype=np.float32)
+            offsets = nb_aggregate_pointwise_center_offset(offsets, xyz, ins_labels, "Axis_center")
+            data_tuple += (xyz, ins_labels, offsets)
+
         return data_tuple
 
 def collate_fn_BEV(data): # stack alone batch dimension
@@ -107,13 +148,29 @@ def collate_fn_BEV(data): # stack alone batch dimension
     point_label = [d[3] for d in data]                           # point-wise sem label
     xyz = [d[4] for d in data]                                   # point-wise coor
 
-    return {
+    if len(data) > 5:
+        pt_cart_xyz = [d[5] for d in data]
+        pt_ins_labels = [d[6] for d in data]
+        offsets = [d[7] for d in data]
+
+    result = {
         'vox_coor': torch.from_numpy(data2stack),
         'vox_label': torch.from_numpy(label2stack),
         'grid': grid_ind_stack,
         'pt_labs': point_label,
         'pt_fea': xyz,
     }
+
+    if len(data) > 5:
+        result.update({
+                'pt_fea': xyz,
+                'pt_cart_xyz': pt_cart_xyz,
+                'pt_ins_labels': pt_ins_labels,
+                'offsets': offsets,
+            }
+        )
+
+    return result
 
 def build_dataloader(filenames, dataset_base, scene_size, grid_size=[480, 360, 32], n_classes=2, batch_size=2, keep_road=False):
     train_pt_dataset = dataset_base(filenames, scene_size=scene_size, n_classes=n_classes, keep_road=keep_road)

@@ -109,6 +109,5 @@ def DBSCAN_cluster(cfg):
     eps = cfg.MODEL.POST_PROCESSING.EPS
     return partial(cluster_batch, choose_algo='dbscan', params={'min_samples': min_samples, 'eps': eps})
 
-def MeanShift_embedding_cluster(cfg):
-    bandwidth = cfg.MODEL.POST_PROCESSING.BANDWIDTH
+def MeanShift_embedding_cluster(bandwidth):
     return partial(cluster_batch, choose_algo='meanshift_embedding', params={'bandwidth': bandwidth})

@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from torch import nn
 from torch_cluster import fps
 from sklearn.neighbors import NearestNeighbors
+from ds_net.modules.clustering import MeanShift_embedding_cluster
 
 
 def pairwise_distance(x: torch.Tensor, y=None):
@@ -25,7 +26,7 @@ def pairwise_distance(x: torch.Tensor, y=None):
 
 
 class PytorchMeanshift(nn.Module):
-    def __init__(self, cluster_fn, bandwidth=[0.2, 1.7, 3.2], iteration=4, point_num_th=10000, init_size=32):
+    def __init__(self, bandwidth=[0.2, 1.7, 3.2], iteration=4, point_num_th=10000, init_size=32):
         super(PytorchMeanshift, self).__init__()
         self.bandwidth = bandwidth
         self.iteration = iteration
@@ -35,7 +36,7 @@ class PytorchMeanshift(nn.Module):
         self.point_num_th = point_num_th
         self.init_size = init_size
         
-        self.cluster_fn = cluster_fn
+        self.cluster_fn = MeanShift_embedding_cluster(bandwidth)
         self.learnable_bandwidth_weights_layer_list = nn.ModuleList()
         for i in range(self.iteration):
             layer = nn.Sequential(
@@ -116,10 +117,8 @@ class PytorchMeanshift(nn.Module):
                 new_X, bandwidth_weight = self.calc_shifted_matrix_flat_kernel_bandwidth_weight(X, X_fea, iter_i)
                 iter_X_list.append(new_X)
                 bandwidth_list.append(bandwidth_weight)
-                old_X = X
                 X = new_X
 
-                cpu_X = X.detach().cpu().numpy()
                 if need_cluster:
                     Id = self.final_cluster(X, index[batch_i], xyz[batch_i], sampled_xyz[batch_i], semantic_classes[batch_i], batch_i, batch)
                     ins_id.append(Id)
