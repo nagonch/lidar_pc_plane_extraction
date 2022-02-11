@@ -38,10 +38,11 @@ class PolarOffsetSpconvMeanshift(PolarOffset):
         pred_offsets, ins_fea_list = self.ins_head(ins_fea, batch)
         batch['ins_fea_list'] = ins_fea_list
         regressed_centers = [offset + torch.from_numpy(xyz).cuda() for offset, xyz in zip(pred_offsets, batch['pt_cart_xyz'])]
+        semantic_classes = semantic_classes.to(torch.bool)
 
-        ins_id_preds = self.pytorch_meanshift(batch['pt_cart_xyz'], regressed_centers, semantic_classes, batch, need_cluster=is_test)
+        ins_id_preds, centers_history = self.pytorch_meanshift(batch['pt_cart_xyz'], regressed_centers, semantic_classes, batch, need_cluster=is_test)
 
-        return ins_id_preds, regressed_centers
+        return ins_id_preds, regressed_centers, centers_history
 
 def build_model(device_name, model_state_path, n_classes):
     device = torch.device(device_name)
