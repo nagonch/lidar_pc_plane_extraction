@@ -4,7 +4,40 @@ import torch.nn.functional as F
 from torch import nn
 from torch_cluster import fps
 from sklearn.neighbors import NearestNeighbors
-from .modules.clustering import MeanShift_embedding_cluster
+from sklearn.cluster import MeanShift
+
+
+def meanshift_cluster(shifted_pcd, valid, bandwidth=1.0):
+    embedding_dim = shifted_pcd.shape[1]
+    clustered_ins_ids = np.zeros(shifted_pcd.shape[0], dtype=np.int32)
+    valid_shifts = shifted_pcd[valid, :].reshape(-1, embedding_dim) if valid is not None else shifted_pcd
+    if valid_shifts.shape[0] == 0:
+        return clustered_ins_ids
+
+    ms = MeanShift(bandwidth=bandwidth, bin_seeding=True)
+    try:
+        ms.fit(valid_shifts)
+    except Exception as e:
+        ms = MeanShift(bandwidth=bandwidth)
+        ms.fit(valid_shifts)
+        print("\nException: {}.".format(e))
+        print("Disable bin_seeding.")
+    labels = ms.labels_ + 1
+    assert np.min(labels) > 0
+    if valid is not None:
+        clustered_ins_ids[valid] = labels
+        return clustered_ins_ids
+    else:
+        return labels
+    
+
+def cluster_batch(cart_xyz_list, shift_list, valid_list):
+        bs = len(cart_xyz_list)
+        pred_ins_ids_list = []
+        for i in range(bs):
+            i_clustered_ins_ids = meanshift_cluster(shift_list[i], valid_list[i])
+            pred_ins_ids_list.append(i_clustered_ins_ids)
+        return pred_ins_ids_list 
 
 
 def pairwise_distance(x: torch.Tensor, y=None):
@@ -36,7 +69,6 @@ class PytorchMeanshift(nn.Module):
         self.point_num_th = point_num_th
         self.init_size = init_size
         
-        self.cluster_fn = MeanShift_embedding_cluster(bandwidth)
         self.learnable_bandwidth_weights_layer_list = nn.ModuleList()
         for i in range(self.iteration):
             layer = nn.Sequential(
@@ -66,7 +98,7 @@ class PytorchMeanshift(nn.Module):
     
     def final_cluster(self, final_X, index, data, sampled_data, valid, batch_i, batch):
         # cluster for sampled_data
-        sampled_labels = self.cluster_fn([None], [final_X.detach().cpu().numpy()], [None])[0].reshape(-1)
+        sampled_labels = cluster_batch([None], [final_X.detach().cpu().numpy()], [None])[0].reshape(-1)
 
         if index is not None:
             # use NN to assign ins labels to all points in data
@@ -78,7 +110,7 @@ class PytorchMeanshift(nn.Module):
 
         # generate ins labels for all things and stuff points
         clustered_ins_ids = np.zeros(valid.shape[0], dtype=np.int32)
-        clustered_ins_ids[valid] = labels
+        clustered_ins_ids[valid.detach().cpu().numpy()] = labels
 
         return clustered_ins_ids
     
@@ -90,17 +122,14 @@ class PytorchMeanshift(nn.Module):
         return index
     
     def forward(self, cartesian_xyz, regressed_centers, semantic_classes, batch, need_cluster=False):
-        semantic_classes = semantic_classes.astype(torch.bool)
         xyz = [points[classes] for points, classes in zip(cartesian_xyz, semantic_classes)]
         centers = [points[classes] for points, classes in zip(regressed_centers, semantic_classes)]
-        
-        index = [self.down_sample(torch.from_numpy(point).cuda()) for point in xyz]
+        index = [self.down_sample(point) for point in xyz]
         sampled_xyz = [(xyz_[index_.detach().cpu().numpy()] if index_ is not None else xyz_) for xyz_, index_ in zip(xyz, index)]
         sampled_centers = [(center[index_] if index_ is not None else center) for center, index_ in zip(centers, index)]
         
         batch_size = len(xyz)
         ins_id = []
-        bandwidth_weight_summary = []
         X_history = []
         for batch_i in range(batch_size):
             X = sampled_centers[batch_i]
@@ -120,7 +149,6 @@ class PytorchMeanshift(nn.Module):
                 iter_X_list.append(new_X)
                 bandwidth_list.append(bandwidth_weight)
                 X = new_X
-
             if need_cluster:
                 Id = self.final_cluster(X, index[batch_i], xyz[batch_i], sampled_xyz[batch_i], semantic_classes[batch_i], batch_i, batch)
                 ins_id.append(Id)
