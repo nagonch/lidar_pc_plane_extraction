@@ -90,6 +90,7 @@ class PytorchMeanshift(nn.Module):
         return index
     
     def forward(self, cartesian_xyz, regressed_centers, semantic_classes, batch, need_cluster=False):
+        semantic_classes = semantic_classes.astype(torch.bool)
         xyz = [points[classes] for points, classes in zip(cartesian_xyz, semantic_classes)]
         centers = [points[classes] for points, classes in zip(regressed_centers, semantic_classes)]
         
@@ -100,6 +101,7 @@ class PytorchMeanshift(nn.Module):
         batch_size = len(xyz)
         ins_id = []
         bandwidth_weight_summary = []
+        X_history = []
         for batch_i in range(batch_size):
             X = sampled_centers[batch_i]
             if X.shape[0] <= 1 and need_cluster:
@@ -119,8 +121,9 @@ class PytorchMeanshift(nn.Module):
                 bandwidth_list.append(bandwidth_weight)
                 X = new_X
 
-                if need_cluster:
-                    Id = self.final_cluster(X, index[batch_i], xyz[batch_i], sampled_xyz[batch_i], semantic_classes[batch_i], batch_i, batch)
-                    ins_id.append(Id)
+            if need_cluster:
+                Id = self.final_cluster(X, index[batch_i], xyz[batch_i], sampled_xyz[batch_i], semantic_classes[batch_i], batch_i, batch)
+                ins_id.append(Id)
+            X_history.append(iter_X_list)
                     
-        return ins_id
+        return ins_id, X_history

@@ -52,4 +52,3 @@ def build_model(device_name, model_state_path, n_classes):
     model = model.cuda()
 
     return model
-    
