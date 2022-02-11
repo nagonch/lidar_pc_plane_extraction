@@ -172,8 +172,8 @@ def collate_fn_BEV(data): # stack alone batch dimension
 
     return result
 
-def build_dataloader(filenames, dataset_base, scene_size, grid_size=[480, 360, 32], n_classes=2, batch_size=2, keep_road=False):
-    train_pt_dataset = dataset_base(filenames, scene_size=scene_size, n_classes=n_classes, keep_road=keep_road)
+def build_dataloader(filenames, dataset_base, scene_size, grid_size=[480, 360, 32], n_classes=2, batch_size=2, return_instance=False, keep_road=False):
+    train_pt_dataset = dataset_base(filenames, scene_size=scene_size, n_classes=n_classes, keep_road=keep_road, return_instance=return_instance)
     s_dataset = spherical_dataset(train_pt_dataset, grid_size)
     train_dataset_loader = torch.utils.data.DataLoader(
         dataset = s_dataset,
