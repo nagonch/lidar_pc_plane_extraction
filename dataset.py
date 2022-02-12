@@ -48,6 +48,7 @@ class KittiDataset(Dataset):
     
     def __getitem__(self, idx):
         filenames = self.filenames[idx]
+        
         scene_path = filenames[0]
         labels_path = filenames[1]
         manual_path = filenames[2]
@@ -80,24 +81,23 @@ def get_kitti_filepaths(
     instance_labels = []
     for drive in drives:
         folder_manual_labels = [labels_manual.format(drive) + '/' + scene for scene in os.listdir(labels_manual.format(drive))]
-        folder_instance_labels = [labels_instance.format(drive) + '/' + scene for scene in os.listdir(labels_manual.format(drive))]
+        folder_instance_labels = [labels_instance.format(drive) + '/' + 'label-' + scene.split("/")[-1] for scene in folder_manual_labels]
         folder_scenes = [scenes_path.format(drive) + '/' + scene.split("/")[-1].replace('.npy', '.bin') for scene in folder_manual_labels]
         folder_labels = [labels_original.format(drive) + '/' + scene.split("/")[-1].replace('.npy', '.label') for scene in folder_manual_labels]
         labels.append(folder_labels)
         scenes.append(folder_scenes)
         manual_labels.append(folder_manual_labels)
         instance_labels.append(folder_instance_labels)
-    
+
     manual_labels = [label for folder in manual_labels for label in folder]
     labels = [label for folder in labels for label in folder]
     scenes = [scene for folder in scenes for scene in folder]
     instance_labels = [label for folder in instance_labels for label in folder]
-    
     result = []
     for scene, label, manual_label, instance_label in zip(scenes, labels, manual_labels, instance_labels):
         lis = [scene, label, manual_label]
         if return_instance:
-            lis += instance_label
+            lis.append(instance_label)
         result.append(lis)
     train = result[:int(len(result) * train_size)]
     test = result[int(len(result) * train_size):]
