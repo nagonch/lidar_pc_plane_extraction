@@ -401,7 +401,7 @@ class Spconv_ins_offset_concatxyz_threelayers_head_cfg(nn.Module):
             pt_ins_fea_list.append(fea[batch_i, grid_ind[batch_i][:,0], grid_ind[batch_i][:,1], grid_ind[batch_i][:,2]])
         pt_pred_offsets_list = []
         for batch_i, pt_ins_fea in enumerate(pt_ins_fea_list):
-            pt_pred_offsets_list.append(self.offset_linear(self.offset(torch.cat([pt_ins_fea,torch.from_numpy(xyz[batch_i]).cuda()],dim=1))))
+            pt_pred_offsets_list.append(self.offset_linear(self.offset(torch.cat([pt_ins_fea,xyz[batch_i].cuda()],dim=1))))
         return pt_pred_offsets_list, pt_ins_fea_list
 
 class Spconv_alsaNet_res(nn.Module):
