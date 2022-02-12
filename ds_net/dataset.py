@@ -137,7 +137,7 @@ class spherical_dataset(Dataset):
         if len(data) == 3:
             offsets = np.zeros([xyz.shape[0], 3], dtype=np.float32)
             offsets = nb_aggregate_pointwise_center_offset(offsets, xyz, ins_labels, "Axis_center")
-            data_tuple += (xyz[:, :3], ins_labels, offsets)
+            data_tuple += (xyz, ins_labels, offsets)
         return data_tuple
 
 def collate_fn_BEV(data): # stack alone batch dimension
@@ -148,7 +148,7 @@ def collate_fn_BEV(data): # stack alone batch dimension
     xyz = [d[4] for d in data]                                   # point-wise coor
 
     if len(data[0]) > 5:
-        pt_cart_xyz = [d[5] for d in data]
+        pt_cart_xyz = [d[5][:, :3] for d in data]
         pt_ins_labels = [d[6] for d in data]
         centers = [d[7] for d in data]
 
