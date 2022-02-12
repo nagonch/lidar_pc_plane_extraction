@@ -137,7 +137,7 @@ class spherical_dataset(Dataset):
         if len(data) == 3:
             offsets = np.zeros([xyz.shape[0], 3], dtype=np.float32)
             offsets = nb_aggregate_pointwise_center_offset(offsets, xyz, ins_labels, "Axis_center")
-            data_tuple += (xyz, ins_labels, offsets)
+            data_tuple += (xyz[:, :3], ins_labels, offsets)
         return data_tuple
 
 def collate_fn_BEV(data): # stack alone batch dimension
