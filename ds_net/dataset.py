@@ -63,7 +63,7 @@ def nb_aggregate_pointwise_center_offset(offsets, xyz, ins_labels, center_type):
             mean_xyz = np.mean(xyz_i, axis=0)
         else:
             raise NotImplementedError
-        offsets[i_indices] = mean_xyz - xyz_i
+        offsets[i_indices] = mean_xyz
     return offsets
 
 
@@ -151,7 +151,7 @@ def collate_fn_BEV(data): # stack alone batch dimension
     if len(data) > 5:
         pt_cart_xyz = [d[5] for d in data]
         pt_ins_labels = [d[6] for d in data]
-        offsets = [d[7] for d in data]
+        centers = [d[7] for d in data]
 
     result = {
         'vox_coor': torch.from_numpy(data2stack),
@@ -166,7 +166,7 @@ def collate_fn_BEV(data): # stack alone batch dimension
                 'pt_fea': xyz,
                 'pt_cart_xyz': pt_cart_xyz,
                 'pt_ins_labels': pt_ins_labels,
-                'offsets': offsets,
+                'centers': centers,
             }
         )
 

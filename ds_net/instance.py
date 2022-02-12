@@ -11,13 +11,15 @@ global_cfg.DIST_TRAIN = None
 
 
 class PolarOffsetSpconvMeanshift(PolarOffset):
-    def __init__(self, cfg):
+    def __init__(self, cfg, only_offsets=False):
         super(PolarOffsetSpconvMeanshift, self).__init__(cfg, need_create_model=False)
         self.backbone = getattr(spconv_unet, cfg.MODEL.BACKBONE.NAME)(cfg)
         self.sem_head = getattr(spconv_unet, cfg.MODEL.SEM_HEAD.NAME)(cfg)
         self.vfe_model = getattr(PointNet, cfg.MODEL.VFE.NAME)(cfg)
         self.ins_head = getattr(spconv_unet, cfg.MODEL.INS_HEAD.NAME)(cfg)
-        self.pytorch_meanshift = PytorchMeanshift()
+        self.only_offsets = only_offsets
+        if not self.only_offsets:
+            self.pytorch_meanshift = PytorchMeanshift()
         
 
     def forward(self, batch, is_test=False):
@@ -36,6 +38,8 @@ class PolarOffsetSpconvMeanshift(PolarOffset):
             semantic_classes = batch['pt_labs']
  
         pred_offsets, ins_fea_list = self.ins_head(ins_fea, batch)
+        if self.only_offsets:
+            return pred_offsets
         batch['ins_fea_list'] = ins_fea_list
         regressed_centers = [offset + torch.from_numpy(xyz).cuda() for offset, xyz in zip(pred_offsets, batch['pt_cart_xyz'])]
         semantic_classes = semantic_classes.to(torch.bool)
