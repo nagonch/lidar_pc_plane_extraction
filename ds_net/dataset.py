@@ -35,13 +35,17 @@ def nb_process_label(processed_label,sorted_label_voxel_pair):
 
 
 def calc_xyz_middle(xyz):
-    return np.array([
-        (np.max(xyz[:, 0]) + np.min(xyz[:, 0])) / 2.0,
-        (np.max(xyz[:, 1]) + np.min(xyz[:, 1])) / 2.0,
-        (np.max(xyz[:, 2]) + np.min(xyz[:, 2])) / 2.0
-    ], dtype=np.float32)
-
-things_ids = set([1])
+#     print(xyz)
+#     return np.array([
+#         (np.max(xyz[:, 0]) + np.min(xyz[:, 0])) / 2.0,
+#         (np.max(xyz[:, 1]) + np.min(xyz[:, 1])) / 2.0,
+#         (np.max(xyz[:, 2]) + np.min(xyz[:, 2])) / 2.0
+#     ], dtype=np.float32)
+    return torch.stack((
+        (torch.max(xyz[:, 0]) + torch.min(xyz[:, 0])) / 2.0,
+        (torch.max(xyz[:, 1]) + torch.min(xyz[:, 1])) / 2.0,
+        (torch.max(xyz[:, 2]) + torch.min(xyz[:, 2])) / 2.0
+    ))
 
 
 # @nb.jit #TODO: why jit would lead to offsets all zero?
@@ -51,7 +55,7 @@ def nb_aggregate_pointwise_center_offset(offsets, xyz, ins_labels, center_type):
     for i in np.unique(ins_labels):
         # if ((i & 0xFFFF0000) >> 16) == 0: #TODO: change to use thing list to filter
         #     continue
-        if (i & 0xFFFF) not in things_ids:
+        if i == 0:
             continue
         i_indices = (ins_labels == i).reshape(-1)
         xyz_i = xyz[i_indices]
