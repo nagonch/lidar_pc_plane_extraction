@@ -79,7 +79,7 @@ class PolarOffsetSpconvMeanshift(PolarOffset):
         return ins_id_preds, regressed_centers, centers_history
     
 master_weight = torch.load('/mnt/vol0/datasets/plane_extraction_model_states/selected_models/dsnet-semantic-kitti-type-1.pth')
-offset_weight = torch.load('offset_pretrain_pq_0.564.pth')
+offset_weight = torch.load('/mnt/vol0/datasets/plane_extraction_model_states/selected_models/offset_pretrain_pq_0.564.pth')
 for key in offset_weight['model_state'].keys():
     master_weight['model_state'][key] = offset_weight['model_state'][key]
     

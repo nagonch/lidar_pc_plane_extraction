@@ -76,6 +76,9 @@ class PolarOffsetSpconvMeanshift(PolarOffset):
         return ins_id_preds, regressed_centers, centers_history, sampled_centers
     
 master_weight = torch.load('/mnt/vol0/datasets/plane_extraction_model_states/selected_models/dsnet-instance-part1.pth')
+ds_weight = torch.load('/mnt/vol0/datasets/plane_extraction_model_states/selected_models/dsnet_pretrain_pq_0.577.pth')
+for key in ds_weight['model_state'].keys():
+    master_weight['model_state'][key] = ds_weight['model_state'][key]
 
 device = torch.device('cuda:0')
 global_cfg.DATA_CONFIG.NCLASS = 2
