@@ -115,10 +115,10 @@ class PytorchMeanshift(nn.Module):
         return clustered_ins_ids
     
     def down_sample(self, data):
-        ratio = (float(self.point_num_th) / data.shape[0]) if data.shape[0] != 0 else 10086
+        ratio = float(self.point_num_th) / data.shape[0]
         if ratio >= 1.0:
             return None
-        index = fps(data, torch.zeros(data.shape[0]).cuda().long(), ratio=ratio, random_start=False)
+        index = fps(data.cuda(), torch.zeros(data.shape[0]).cuda().long(), ratio=ratio, random_start=False)
         return index
     
     def forward(self, cartesian_xyz, regressed_centers, semantic_classes, batch, need_cluster=False):
@@ -152,6 +152,6 @@ class PytorchMeanshift(nn.Module):
             if need_cluster:
                 Id = self.final_cluster(X, index[batch_i], xyz[batch_i], sampled_xyz[batch_i], semantic_classes[batch_i], batch_i, batch)
                 ins_id.append(Id)
-            X_history.append(iter_X_list)
+            X_history.append(torch.stack(iter_X_list))
                     
-        return ins_id, X_history
+        return ins_id, X_history, sampled_centers
