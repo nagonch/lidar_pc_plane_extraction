@@ -101,7 +101,7 @@ from tqdm import tqdm
 
 
 RUN_ID = datetime.fromtimestamp(time()).strftime("%d-%m-%Y--%H-%M")
-
+model_save_path = f'/mnt/vol0/datasets/plane_extraction_model_states/saved_models/{RUN_ID}.pth'
 wandb.init(project="train", entity="skoltech-plane-extraction")
 wandb.run.name = f'ds-net-offset--kitti--{RUN_ID}'
 wandb.config = {
