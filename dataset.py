@@ -64,6 +64,7 @@ def get_kitti_filepaths(
     manual_labels = []
     for drive in drives:
         folder_manual_labels = [labels_manual.format(drive) + '/' + scene for scene in os.listdir(labels_manual.format(drive))]
+        folder_manual_labels = sorted(folder_manual_labels, key=lambda x: int(x[6:-4]))
         folder_scenes = [scenes_path.format(drive) + '/' + scene.split("/")[-1].replace('.npy', '.bin') for scene in folder_manual_labels]
         folder_labels = [labels_original.format(drive) + '/' + scene.split("/")[-1].replace('.npy', '.label') for scene in folder_manual_labels]
         labels.append(folder_labels)
