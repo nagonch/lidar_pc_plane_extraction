@@ -100,7 +100,7 @@ if __name__=='__main__':
     parser.add_argument('--batch-size', type=int, default=2)
     parser.add_argument('--lr', type=float, default=1e-3)
     parser.add_argument('--n-steps', type=int, default=500)
-    parser.add_argument('--n-classes', type=int, default=2)
+    parser.add_argument('--n-classes', type=int, default=3)
     parser.add_argument('--model-save-path', type=str, default=f'/mnt/vol0/datasets/plane_extraction_model_states/saved_models/{RUN_ID}.pth')
     parser.add_argument('--train-size', type=float, default=0.75)
     parser.add_argument('--device-name', type=str, default='cuda:0')

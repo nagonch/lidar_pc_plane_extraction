@@ -4,7 +4,7 @@ python benchmark_semantic.py \
 --n-classes 3 \
 --train-size 0.75 \
 --device-name 'cuda:0' \
---scene-size 120000 \
+--scene-size 110000 \
 --model-state-path '/mnt/vol0/datasets/plane_extraction_model_states/selected_models/dsnet_semantic_init.pth' \
 --dataset 'kitti' \
 --model-name 'dsnet' \
