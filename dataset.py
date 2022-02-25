@@ -25,8 +25,8 @@ class KittiDataset(Dataset):
 
     def read_labels(self, filename, filename_manual):
         labels_road = (np.fromfile(filename, dtype=np.int32) & 0xFFFF).reshape((-1, 1)).astype(np.uint8)
-        labels_road = self.map_classes(labels_road)[:, 0]
-        labels_plane = np.load(filename_manual)
+        labels_road = self.map_classes(labels_road)[:, 0][:self.scene_size]
+        labels_plane = np.load(filename_manual)[:self.scene_size]
 
         result_labels = np.clip(labels_road + labels_plane, 0, int(self.keep_road) + 1).astype(np.uint8)
 
