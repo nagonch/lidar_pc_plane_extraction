@@ -1,22 +1,31 @@
+from ds_net.instance import InstanceOffset, DSNet
+import argparse
+from time import time
+from typing import Any
+from logging_funtions import log_args
+from dataset import get_filepaths
 import torch
-from ds_net.modules import PointNet
-from ds_net.modules.main_models import PolarOffset
-from ds_net.modules import spconv_unet
-from ds_net.modules.config import global_cfg
-from ds_net.modules.train_utils import find_match_key
-from ds_net.meanshift import PytorchMeanshift
-from ds_net.instance_losses import instance_loss
+from model_hub import get_model
+import wandb
+from torch.optim.lr_scheduler import ExponentialLR, ReduceLROnPlateau
+from tqdm import tqdm
+from metrics.semantic import log_metrics
+import torch.nn.functional as F
+from datetime import datetime
 from dataset import get_kitti_filepaths
 from ds_net.dataset import build_dataloader
 from dataset import KittiDataset
+from ds_net.semantic import build_model
+import numpy as np
+from ds_net.modules.config import global_cfg
+from ds_net.modules.train_utils import load_pretrained_model
 from datetime import datetime
 from time import time
 import wandb
 from torch.optim.lr_scheduler import ExponentialLR
 from tqdm import tqdm
-
-
-global_cfg.DIST_TRAIN = None
+from ds_net.instance_losses import instance_loss
+from ds_net.modules.train_utils import find_match_key
 
 
 def load_pretrained_model(model, checkpoint, to_cpu=False):
@@ -38,63 +47,27 @@ def load_pretrained_model(model, checkpoint, to_cpu=False):
     state_dict = model.state_dict()
     state_dict.update(update_model_state)
     model.load_state_dict(state_dict)
-    
 
-class PolarOffsetSpconvMeanshift(PolarOffset):
-    def __init__(self, cfg, only_offsets=False):
-        super(PolarOffsetSpconvMeanshift, self).__init__(cfg, need_create_model=False)
-        self.backbone = getattr(spconv_unet, cfg.MODEL.BACKBONE.NAME)(cfg)
-        self.sem_head = getattr(spconv_unet, cfg.MODEL.SEM_HEAD.NAME)(cfg)
-        self.vfe_model = getattr(PointNet, cfg.MODEL.VFE.NAME)(cfg)
-        self.ins_head = getattr(spconv_unet, cfg.MODEL.INS_HEAD.NAME)(cfg)
-        self.only_offsets = only_offsets
-        if not self.only_offsets:
-            self.pytorch_meanshift = PytorchMeanshift()
-        
 
-    def forward(self, batch, is_test=False):
-        with torch.no_grad():
-            coor, feature_3d = self.voxelize_spconv(batch)
-            sem_fea, ins_fea = self.backbone(feature_3d, coor, len(batch['grid']))
-            sem_logits = self.sem_head(sem_fea)
-        labels = []
-        if is_test:
-            grid_ind = batch['grid']
-            for i in range(len(grid_ind)):
-                labels.append(sem_logits[i, :, grid_ind[i][:, 0], grid_ind[i][:, 1], grid_ind[i][:, 2]])
-            semantic_classes = torch.stack(labels).permute(0, -1, 1)
-            semantic_classes = torch.argmax(semantic_classes, dim=-1)
-        else:
-            semantic_classes = batch['pt_labs']
- 
-        pred_offsets, ins_fea_list = self.ins_head(ins_fea, batch)
-        if self.only_offsets:
-            return pred_offsets
-        batch['ins_fea_list'] = ins_fea_list
-        regressed_centers = [offset + torch.from_numpy(xyz).cuda() for offset, xyz in zip(pred_offsets, batch['pt_cart_xyz'])]
-        semantic_classes = semantic_classes.to(torch.bool)
+device = torch.device('cuda:0')
 
-        ins_id_preds, centers_history = self.pytorch_meanshift(batch['pt_cart_xyz'], regressed_centers, semantic_classes, batch, need_cluster=is_test)
-
-        return ins_id_preds, regressed_centers, centers_history
-    
-master_weight = torch.load('/mnt/vol0/datasets/plane_extraction_model_states/selected_models/dsnet-semantic-kitti-type-1.pth')
+master_weight = torch.load('/mnt/vol0/datasets/plane_extraction_model_states/saved_models/semantic-3class.pth')
+init_w = master_weight['model_state']['fea_compression.0.weight']
 offset_weight = torch.load('/mnt/vol0/datasets/plane_extraction_model_states/selected_models/offset_pretrain_pq_0.564.pth')
 for key in offset_weight['model_state'].keys():
-    master_weight['model_state'][key] = offset_weight['model_state'][key]
+    if not key in master_weight['model_state'].keys():
+        master_weight['model_state'][key] = offset_weight['model_state'][key]
+assert (master_weight['model_state']['fea_compression.0.weight'] == init_w).all().item()
     
-device = torch.device('cuda:0')
-global_cfg.DATA_CONFIG.NCLASS = 2
-model = PolarOffsetSpconvMeanshift(global_cfg, only_offsets=True).to(device)
-load_pretrained_model(model, master_weight)
-
-train_data, val_data = get_kitti_filepaths(0.7, return_instance=True)
+train_data, val_data = get_kitti_filepaths(0.7)
 train_dataloader = build_dataloader(train_data, KittiDataset, 100000, return_instance=True)
 
-
+model = InstanceOffset(global_cfg).to(device)
+global_cfg.DATA_CONFIG.NCLASS = 2
+load_pretrained_model(model, master_weight)
 lr = 1e-3
 n_steps = 100
-batch_size = 2
+batch_size = 1
 scene_size = 100000
 
 RUN_ID = datetime.fromtimestamp(time()).strftime("%d-%m-%Y--%H-%M")
@@ -112,8 +85,8 @@ optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 torch_lr_scheduler = ExponentialLR(optimizer=optimizer, gamma=0.98)
 criterion = instance_loss
 
-for step in tqdm(range(n_steps)):
-    for i, train_batch in tqdm(enumerate(train_dataloader), leave=False):
+for step in range(n_steps):
+    for i, train_batch in tqdm(enumerate(train_dataloader)):
         optimizer.zero_grad()
         centers = torch.stack([torch.from_numpy(item).cuda() for item in train_batch['centers']]).cuda()
         pred_offsets = model(train_batch)
@@ -126,6 +99,9 @@ for step in tqdm(range(n_steps)):
         optimizer.step()
         torch.cuda.empty_cache()
 
+    for p in model.parameters():
+        break
+    assert (p == init_w).all().item()
     torch_lr_scheduler.step()
     torch.save(
         {

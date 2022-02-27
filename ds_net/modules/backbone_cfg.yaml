@@ -1,7 +1,7 @@
 DATA_CONFIG:
     DATASET_NAME: SemanticKitti
     DATASET_PATH: ./data
-    NCLASS: 3
+    NCLASS: 2
     RETURN_REF: True
     RETURN_INS_ID: True
     DATALOADER:

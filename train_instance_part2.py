@@ -90,7 +90,7 @@ train_dataloader = build_dataloader(train_data, KittiDataset, 100000, return_ins
 
 lr = 1e-3
 n_steps = 100
-batch_size = 2
+batch_size = 1
 scene_size = 100000
 
 from datetime import datetime

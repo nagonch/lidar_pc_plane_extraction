@@ -7,12 +7,13 @@ import torch
 class InstanceOffset(PolarOffsetSpconv):
     def __init__(self, cfg):
         super(InstanceOffset, self).__init__(cfg)
+        for param in self.parameters():
+            param.requires_grad = False
         self.ins_head = getattr(spconv_unet, cfg.MODEL.INS_HEAD.NAME)(cfg)
         
     def forward(self, batch):
-        with torch.no_grad():
-            coor, feature_3d = self.voxelize_spconv(batch)
-            sem_fea, ins_fea = self.backbone(feature_3d, coor, len(batch['grid']))    
+        coor, feature_3d = self.voxelize_spconv(batch)
+        sem_fea, ins_fea = self.backbone(feature_3d, coor, len(batch['grid']))    
         pred_offsets, ins_fea_list = self.ins_head(ins_fea, batch)
         return pred_offsets
 
@@ -20,13 +21,14 @@ class InstanceOffset(PolarOffsetSpconv):
 class DSNet(InstanceOffset):
     def __init__(self, cfg):
         super(DSNet, self).__init__(cfg)
+        for param in self.parameters():
+            param.requires_grad = False
         self.pytorch_meanshift = PytorchMeanshift()
     
     def forward(self, batch, is_test=False):
-        with torch.no_grad():
-            coor, feature_3d = self.voxelize_spconv(batch)
-            sem_fea, ins_fea = self.backbone(feature_3d, coor, len(batch['grid']))    
-            pred_offsets, ins_fea_list = self.ins_head(ins_fea, batch)
+        coor, feature_3d = self.voxelize_spconv(batch)
+        sem_fea, ins_fea = self.backbone(feature_3d, coor, len(batch['grid']))    
+        pred_offsets, ins_fea_list = self.ins_head(ins_fea, batch)
         if is_test:
             sem_logits = self.sem_head(sem_fea)
 
@@ -34,8 +36,7 @@ class DSNet(InstanceOffset):
             result = []
             for i in range(len(grid_ind)):
                 result.append(sem_logits[i, :, grid_ind[i][:, 0], grid_ind[i][:, 1], grid_ind[i][:, 2]])
-            semantic_classes = torch.stack(result)
-            semantic_classes = semantic_classes.argmax(-2)
+            semantic_classes = torch.stack(result).argmax(-2)
         else:
             semantic_classes = batch['pt_labs']
         batch['ins_fea_list'] = ins_fea_list
