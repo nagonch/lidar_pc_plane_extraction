@@ -34,7 +34,7 @@ def build_model(device_name, model_state_path, n_classes):
     model = PolarOffsetSpconv(global_cfg).to(device)
     if model_state_path:
         load_pretrained_model(model, model_state_path)
-    model = model.cuda()
+    # model = model.cuda()
 
     return model
     

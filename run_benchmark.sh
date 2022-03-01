@@ -1,5 +1,5 @@
 python benchmark_semantic.py \
---batch-size 2 \
+--batch-size 1 \
 --n-steps 500 \
 --n-classes 3 \
 --train-size 0.75 \
