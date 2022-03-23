@@ -1,6 +1,7 @@
 import torch
 import spconv.pytorch as spconv
 from torch import nn
+import hdbscan
 from torch_scatter import scatter_mean
 from dgl.nn import SAGEConv
 import dgl
@@ -109,3 +110,18 @@ class GPS3Net(nn.Module):
         scores = self.edgenet(cluster_features, node_centroids)
         
         return scores
+
+class GPS3Net_inference():
+    def __init__(self):
+        self.net = GPS3Net()
+        self.clusterer = hdbscan.HDBSCAN(min_cluster_size=2)
+
+    def voselize(self, points, cluster_labels):
+        raise NotImplementedError
+
+    def predict(self, points):
+        cluster_labels = torch.from_numpy(self.clusterer.fit_predict(points)).cuda() + 1
+        features, indices, spatial_shape, node_centroids = self.voxelize(points, cluster_labels)
+        pred = self.net(features, indices, cluster_labels, spatial_shape, node_centroids)
+        
+        return pred
