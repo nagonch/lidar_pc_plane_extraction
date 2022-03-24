@@ -8,7 +8,7 @@ import open3d as o3d
 class KittiDataset(Dataset):
     def __init__(self, filenames,
                  scene_size=19000, n_classes=2, keep_road=False):
-        self.scene_size = 19000
+        self.scene_size = scene_size
         self.keep_road = keep_road
         self.map_classes = np.vectorize(
             self.get_map,
@@ -24,8 +24,6 @@ class KittiDataset(Dataset):
         return class_map.get(x, 0)
 
     def read_labels(self, filename):
-#         labels_road = (np.fromfile(filename, dtype=np.int32) & 0xFFFF).reshape((-1, 1)).astype(np.uint8)
-#         labels_road = self.map_classes(labels_road)[:, 0][:self.scene_size]
         labels = np.load(filename)
         
         return torch.from_numpy(labels)
@@ -42,7 +40,6 @@ class KittiDataset(Dataset):
     
     def __getitem__(self, idx):
         scene_path, labels_path = self.filenames[idx]
-        print(scene_path, labels_path)
         scene = self.read_scene(scene_path)[:self.scene_size]
         labels = self.read_labels(labels_path)[:self.scene_size]
         return scene, labels.reshape(-1, 1)
