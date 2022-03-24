@@ -17,7 +17,7 @@ class SPConvnet(nn.Module):
     def __init__(self):
         super().__init__()
         self.net = spconv.SparseSequential(
-            conv3x3x3(24, 64),
+            conv3x3x3(11, 64),
             nn.ReLU(),
             conv3x3x3(64, 32),
             nn.ReLU(),

@@ -40,6 +40,7 @@ def get_gt_edges(gt_labels, overseg_labels):
 def convert_to_net_data(batch, clusterer, spatial_shape=[480, 360, 32]):
     gt_labels = batch['pt_labs'][0].reshape(-1)
     mask = gt_labels >= 1
+    gt_labels = gt_labels[mask]
     grid = batch['grid'][0][mask]
     pt_fea = batch['pt_fea'][0][mask]
     xyz = batch['xyz'][0][mask]
