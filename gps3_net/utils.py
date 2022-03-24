@@ -47,6 +47,7 @@ def convert_to_net_data(batch, clusterer, spatial_shape=[480, 360, 32]):
     
     cluster_labels = torch.tensor(clusterer.fit_predict(xyz))
     mask2 = cluster_labels >= 0
+    gt_labels = gt_labels[mask2]
     cluster_labels = cluster_labels[mask2]
     grid = grid[mask2]
     pt_fea = pt_fea[mask2]
