@@ -1,5 +1,6 @@
 import numpy as np
 from itertools import combinations
+from torch_scatter import scatter_mean
 import torch
 
 
@@ -34,3 +35,22 @@ def get_gt_edges(gt_labels, overseg_labels):
                 edges[n] = l_edge[i][j]
                 n += 1
     return edges
+
+
+def convert_to_net_data(batch, cluster_labels, spatial_shape=[480, 360, 32]):
+    gt_labels = batch['pt_labs'][0].reshape(-1)
+    mask = gt_labels >= 1
+    grid = batch['grid'][0][mask]
+    
+    pt_fea = batch['pt_fea'][0][mask]
+    xyz = batch['xyz'][0][mask]
+    
+    features = torch.cat((batch['xyz'][0], torch.tensor(pt_fea)), axis=1)
+    indices = torch.cat((cluster_labels[None].T, torch.tensor(grid)), axis=1)
+    spatial_shape = torch.tensor(spatial_shape)
+    
+    node_centroids = scatter_mean(xyz,
+                                  cluster_labels, out=torch.zeros_like(xyz), dim=0)[:cluster_labels.max() + 1, :]
+    
+    return xyz, features, indices, spatial_shape, gt_labels, node_centroids, batch['vox_coor'][0]
+
