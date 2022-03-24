@@ -34,7 +34,7 @@ class SPConvnet(nn.Module):
         feats = Variable(result[indices[:, 0], :, indices[:, 1], indices[:, 2], indices[:, 3]])
         labels = Variable(cluster_labels.repeat((32, 1)).T)
         out = Variable(torch.zeros_like(feats))
-        out = scatter_mean(feats, labels, out=out, dim=0)[:labels.max() + 1, :]
+        out = scatter_mean(feats, labels.to(torch.int64), out=out, dim=0)[:labels.max() + 1, :]
         
         return out
     
@@ -78,8 +78,8 @@ class EdgeNet(nn.Module):
         return graph
         
     def forward(self, x, centroids):
-        edge_weight = self.get_edge_features(x, centroids).cuda()
-        x = torch.cat((x, centroids), axis=1)
+        edge_weight = self.get_edge_features(x, centroids).cuda().to(torch.float32)
+        x = torch.cat((x, centroids), axis=1).double().to(torch.float32)
         
         n_clusters = x.shape[0]
         graph = self.get_graph(n_clusters).to(torch.device('cuda:0'))
