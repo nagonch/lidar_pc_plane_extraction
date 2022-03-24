@@ -60,4 +60,4 @@ def convert_to_net_data(batch, clusterer, spatial_shape=[480, 360, 32]):
     node_centroids = scatter_mean(xyz,
                                   cluster_labels, out=torch.zeros_like(xyz), dim=0)[:cluster_labels.max() + 1, :]
     
-    return xyz, features, indices, spatial_shape, gt_labels, node_centroids, batch['vox_coor'][0]
+    return xyz, features, indices, spatial_shape, gt_labels, node_centroids, batch['vox_coor'][0], cluster_labels
