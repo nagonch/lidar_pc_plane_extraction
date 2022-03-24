@@ -26,7 +26,7 @@ class KittiDataset(Dataset):
     def read_labels(self, filename):
         labels = np.load(filename)
         unique_labels = np.unique(labels)
-        substitute_labels = np.arange(unique_labels.shape[0]) + 1
+        substitute_labels = np.arange(unique_labels.shape[0])
         mapping = dict(zip(unique_labels, substitute_labels))
         map_vector = np.vectorize(
             mapping.get,
