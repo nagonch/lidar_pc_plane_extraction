@@ -44,7 +44,7 @@ def convert_to_net_data(batch, clusterer, spatial_shape=[480, 360, 32]):
     
     pt_fea = batch['pt_fea'][0][mask]
     xyz = batch['xyz'][0][mask]
-    cluster_labels = clusterer.fit_predict(xyz)
+    cluster_labels = torch.tensor(clusterer.fit_predict(xyz))
     
     features = torch.cat((xyz, torch.tensor(pt_fea)), axis=1)
     indices = torch.cat((cluster_labels[None].T, torch.tensor(grid)), axis=1)
