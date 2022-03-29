@@ -27,7 +27,7 @@ class SPConvnet(nn.Module):
     def forward(self, features, indices,
                 cluster_labels, spatial_shape):
         batch_size = indices[:, 0].max() + 1
-        x = spconv.SparseConvTensor(features, indices,
+        x = spconv.SparseConvTensor(features.to(torch.float32), indices.to(torch.int32),
                                     spatial_shape, batch_size)
         
         result = self.net(x).dense()
@@ -96,7 +96,7 @@ class EdgeNet(nn.Module):
     def get_graph(self, n_nodes):
         pairs = torch.tril_indices(n_nodes, n_nodes)
         pairs = pairs.T[pairs[0] != pairs[1]].T
-        pairs = torch.from_numpy(np.array(pairs)).T
+        pairs = torch.from_numpy(np.array(pairs))
         g1, g2 = pairs
         graph = dgl.graph((g1, g2))
         
