@@ -34,7 +34,7 @@ model.load_state_dict(weights)
 optimizer = torch.optim.SGD(model.parameters(), lr=LR, momentum=0.9, weight_decay=5e-4)
 criterion = CrossEntropyLoss()
 # scheduler = ExponentialLR(optimizer, 0.9)
-clusterer = HDBSCAN(min_cluster_size=3)
+clusterer = HDBSCAN(min_cluster_size=4)
 
 wandb.init(project="train", entity="skoltech-plane-extraction")
 wandb.run.name = f'gps3_net--karla--{RUN_ID}'
