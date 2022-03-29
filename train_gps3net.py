@@ -53,22 +53,33 @@ wandb.watch(
 for step in range(N_STEPS):
     with tqdm(train_dataloader, unit="step") as tepoch:
         for i, train_batch in enumerate(tepoch):
-            batch = convert_to_net_data(train_batch, clusterer, spatial_shape=spatial_shape)
-            
-            tepoch.set_description(f"Step {step} / {N_STEPS}")
-            optimizer.zero_grad()
-            preds = model(batch)
-            cluster_labels = [b[-1] for b in batch]
-            gt_labels = [b[-4] for b in batch]
-            gt_graphs = [get_gt_edges(gt, cl).cuda().long() for gt, cl in zip(gt_labels, cluster_labels)]
-            loss = [criterion(out, gt_graph) for out, gt_graph in zip(preds, gt_graphs)]
-            wandb.log({
-                "pred_error": torch.mean(torch.stack(loss)),
-            })
-            for item in loss:
-                item.backward()
-            optimizer.step()
-            torch.cuda.empty_cache()
+            try:
+                batch = convert_to_net_data(train_batch, clusterer, spatial_shape=spatial_shape)
+                
+                tepoch.set_description(f"Step {step} / {N_STEPS}")
+                optimizer.zero_grad()
+                preds = model(batch)
+                cluster_labels = [b[-1] for b in batch]
+                gt_labels = [b[-4] for b in batch]
+                gt_graphs = [get_gt_edges(gt, cl).cuda().long() for gt, cl in zip(gt_labels, cluster_labels)]
+                loss = [criterion(out, gt_graph) for out, gt_graph in zip(preds, gt_graphs)]
+                wandb.log({
+                    "pred_error": torch.mean(torch.stack(loss)),
+                })
+                for item in loss:
+                    item.backward()
+                optimizer.step()
+                torch.cuda.empty_cache()
+            except RuntimeError as e:
+                if 'out of memory' in str(e):
+                    for p in model.parameters():
+                        if p.grad is not None:
+                            del p.grad
+                    torch.cuda.empty_cache()
+                    continue
+                else:
+                    raise e
+
     # scheduler.step()
     torch.save(
             {
