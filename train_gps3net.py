@@ -12,7 +12,7 @@ from torch.optim.lr_scheduler import ExponentialLR
 import wandb
 from datetime import datetime
 from time import time
-from tqdm import tqdm_notebook
+from tqdm import tqdm
 from IPython.display import clear_output
 
 RUN_ID = datetime.fromtimestamp(time()).strftime("%d-%m-%Y--%H-%M")
@@ -32,7 +32,7 @@ weights = torch.load(model_load_path)['model_state']
 model.load_state_dict(weights)
 
 optimizer = torch.optim.SGD(model.parameters(), lr=LR, momentum=0.9, weight_decay=5e-4)
-criterion = torch.nn.CrossEntropyLoss()
+criterion = CrossEntropyLoss()
 # scheduler = ExponentialLR(optimizer, 0.9)
 clusterer = HDBSCAN(min_cluster_size=3)
 
@@ -51,7 +51,7 @@ wandb.watch(
 )
 
 for step in range(N_STEPS):
-    with tqdm_notebook(train_dataloader, unit="step") as tepoch:
+    with tqdm(train_dataloader, unit="step") as tepoch:
         for i, train_batch in enumerate(tepoch):
             batch = convert_to_net_data(train_batch, clusterer, spatial_shape=spatial_shape)
             
