@@ -38,26 +38,31 @@ def get_gt_edges(gt_labels, overseg_labels):
 
 
 def convert_to_net_data(batch, clusterer, spatial_shape=[480, 360, 32]):
-    gt_labels = batch['pt_labs'][0].reshape(-1)
-    mask = gt_labels >= 1
-    gt_labels = gt_labels[mask]
-    grid = batch['grid'][0][mask]
-    pt_fea = batch['pt_fea'][0][mask]
-    xyz = batch['xyz'][0][mask]
+    result = []
     
-    cluster_labels = torch.tensor(clusterer.fit_predict(xyz))
-    mask2 = cluster_labels >= 0
-    gt_labels = gt_labels[mask2]
-    cluster_labels = cluster_labels[mask2]
-    grid = grid[mask2]
-    pt_fea = pt_fea[mask2]
-    xyz = xyz[mask2]
-    
-    features = torch.cat((xyz, torch.tensor(pt_fea)), axis=1)
-    indices = torch.cat((cluster_labels[None].T, torch.tensor(grid)), axis=1)
-    spatial_shape = torch.tensor(spatial_shape)
-    
-    node_centroids = scatter_mean(xyz,
-                                  cluster_labels, out=torch.zeros_like(xyz), dim=0)[:cluster_labels.max() + 1, :]
-    
-    return xyz.cuda(), features.cuda(), indices.cuda(), spatial_shape.cuda(), gt_labels.cuda(), node_centroids.cuda(), batch['vox_coor'][0], cluster_labels.cuda()
+    for i in range(len(batch['grid'])):
+        gt_labels = batch['pt_labs'][i].reshape(-1)
+        mask = gt_labels >= 1
+        gt_labels = gt_labels[mask]
+        grid = batch['grid'][i][mask]
+        pt_fea = batch['pt_fea'][i][mask]
+        xyz = batch['xyz'][i][mask]
+
+        cluster_labels = torch.tensor(clusterer.fit_predict(xyz))
+        mask2 = cluster_labels >= 0
+        gt_labels = gt_labels[mask2]
+        cluster_labels = cluster_labels[mask2]
+        grid = grid[mask2]
+        pt_fea = pt_fea[mask2]
+        xyz = xyz[mask2]
+
+        features = torch.cat((xyz, torch.tensor(pt_fea)), axis=1)
+        indices = torch.cat((cluster_labels[None].T, torch.tensor(grid)), axis=1)
+        spatial_shape = torch.tensor(spatial_shape)
+
+        node_centroids = scatter_mean(xyz,
+                                      cluster_labels, out=torch.zeros_like(xyz), dim=0)[:cluster_labels.max() + 1, :]
+        result.append([xyz.cuda(), features.cuda(), indices.cuda(), spatial_shape.cuda(),
+                      gt_labels.cuda(), node_centroids.cuda(), batch['vox_coor'][i].cuda(),
+                      cluster_labels.cuda()])  
+    return result

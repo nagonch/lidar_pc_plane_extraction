@@ -6,6 +6,7 @@ from torch_scatter import scatter_mean
 from dgl.nn import SAGEConv
 import dgl
 import numpy as np
+from torch.nn.functional import normalize
 from torch.autograd import Variable
 
 
@@ -64,13 +65,37 @@ class EdgeNet(nn.Module):
                                     torch.abs(cluster_centroids[i]-cluster_centroids[j])))
                 n_edge += 1
         return edge_features
+
+    def pyramid_index(self, tensor):
+        n = tensor.shape[0]
+        index = torch.tril_indices(n, n)
+        index = index.T[index[0] != index[1]].T
+        result = tensor[index[0], index[1], :]
+        
+        return result
+
+    def embed_handcalc(self, features, centroids):
+        n_obj, _ = features.shape
+        lhs = features.repeat(n_obj, 1, 1)
+        rhs = features.repeat(n_obj, 1, 1).permute(1, 0, 2)
+        result = normalize(lhs, dim=-1) * normalize(rhs, dim=-1)
+        lhs = centroids.repeat(n_obj, 1, 1)
+        rhs = centroids.repeat(n_obj, 1, 1).permute(1, 0, 2)
+        centroids_dists = torch.abs(lhs - rhs)
+
+        return self.pyramid_index(torch.cat((result, centroids_dists), dim=-1))
+
+    def get_concat_features(self, features):
+        n_obj, _ = features.shape
+        lhs = features.repeat(n_obj, 1, 1)
+        rhs = features.repeat(n_obj, 1, 1).permute(1, 0, 2)
+        result = torch.cat((lhs, rhs), axis=-1)
+        
+        return self.pyramid_index(result)
     
     def get_graph(self, n_nodes):
-        pairs = []
-        for i in range(n_nodes):
-            for j in range(n_nodes):
-                if i < j:
-                    pairs.append([i, j])
+        pairs = torch.tril_indices(n_nodes, n_nodes)
+        pairs = pairs.T[pairs[0] != pairs[1]].T
         pairs = torch.from_numpy(np.array(pairs)).T
         g1, g2 = pairs
         graph = dgl.graph((g1, g2))
@@ -78,7 +103,7 @@ class EdgeNet(nn.Module):
         return graph
         
     def forward(self, x, centroids):
-        edge_weight = self.get_edge_features(x, centroids).cuda().to(torch.float32)
+        edge_weight = self.embed_handcalc(x, centroids).cuda().to(torch.float32)
         x = torch.cat((x, centroids), axis=1).double().to(torch.float32)
         
         n_clusters = x.shape[0]
@@ -87,13 +112,14 @@ class EdgeNet(nn.Module):
         x = self.conv1(graph, x, edge_weight=edge_weight)
         x = self.conv2(graph, x)
         
-        edge_features = torch.zeros(n_edges, 64).cuda()
-        n_edge = 0
-        for i in range(n_clusters):
-            for j in range(n_clusters):
-                if i < j:
-                    edge_features[n_edge] = torch.cat((x[i], x[j]))
-                    n_edge += 1
+        edge_features = self.get_concat_features(x)
+        # edge_features = torch.zeros(n_edges, 64).cuda()
+        # n_edge = 0
+        # for i in range(n_clusters):
+        #     for j in range(n_clusters):
+        #         if i < j:
+        #             edge_features[n_edge] = torch.cat((x[i], x[j]))
+        #             n_edge += 1
         x = self.mlps(edge_features)
         
         return x
@@ -104,10 +130,12 @@ class GPS3Net(nn.Module):
         self.spconvnet = SPConvnet()
         self.edgenet = EdgeNet()
     
-    def forward(self, features, indices,
-                cluster_labels, spatial_shape, node_centroids):
-        cluster_features = self.spconvnet(features, indices, cluster_labels, spatial_shape)
-        scores = self.edgenet(cluster_features, node_centroids)
+    def forward(self, x):
+        scores = []
+        for batch in x:
+            xyz, features, indices, spatial_shape, gt_labels, node_centroids, vox_coor, cluster_labels = batch
+            cluster_features = self.spconvnet(features, indices, cluster_labels, spatial_shape)
+            scores.append(self.edgenet(cluster_features, node_centroids))
         
         return scores
 
