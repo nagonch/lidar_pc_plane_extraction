@@ -75,6 +75,6 @@ for step in range(N_STEPS):
                 'epoch': step,
                 'model_state': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
-                'loss': torch.mean(loss),
+                'loss': torch.mean(loss).item(),
             }, model_save_path.format(RUN_ID),
     )
