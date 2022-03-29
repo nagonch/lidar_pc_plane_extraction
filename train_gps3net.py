@@ -63,7 +63,7 @@ for step in range(N_STEPS):
             gt_graphs = [get_gt_edges(gt, cl).cuda().long() for gt, cl in zip(gt_labels, cluster_labels)]
             loss = [criterion(out, gt_graph) for out, gt_graph in zip(preds, gt_graphs)]
             wandb.log({
-                "pred_error": loss,
+                "pred_error": torch.mean(torch.stack(loss)),
             })
             for item in loss:
                 item.backward()
@@ -75,6 +75,6 @@ for step in range(N_STEPS):
                 'epoch': step,
                 'model_state': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
-                'loss': torch.mean(loss).item(),
+                'loss': torch.mean(torch.stack(loss)),
             }, model_save_path.format(RUN_ID),
     )
