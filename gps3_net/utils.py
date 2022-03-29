@@ -58,11 +58,11 @@ def convert_to_net_data(batch, clusterer, spatial_shape=[480, 360, 32]):
 
         features = torch.cat((xyz, torch.tensor(pt_fea)), axis=1)
         indices = torch.cat((cluster_labels[None].T, torch.tensor(grid)), axis=1)
-        spatial_shape = torch.tensor(spatial_shape)
+        spat_shape = torch.tensor(spatial_shape)
 
         node_centroids = scatter_mean(xyz,
                                       cluster_labels, out=torch.zeros_like(xyz), dim=0)[:cluster_labels.max() + 1, :]
-        result.append([xyz.cuda(), features.cuda(), indices.cuda(), spatial_shape.cuda(),
+        result.append([xyz.cuda(), features.cuda(), indices.cuda(), spat_shape.cuda(),
                       gt_labels.cuda(), node_centroids.cuda(), batch['vox_coor'][i].cuda(),
                       cluster_labels.cuda()])  
     return result
