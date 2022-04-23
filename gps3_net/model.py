@@ -48,7 +48,7 @@ class EdgeNet(nn.Module):
             nn.Linear(64, 32),
             nn.ReLU(),
             nn.Linear(32, 2),
-            nn.Softmax(dim=-1),
+            nn.ReLU(),
         )
     
     def get_edge_features(self, cluster_features, cluster_centroids):

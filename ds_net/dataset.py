@@ -96,7 +96,7 @@ class spherical_dataset(Dataset):
 
         return_fea = return_xyz
 
-        data_tuple += (grid_ind, labels, return_fea) 
+        data_tuple += (grid_ind, labels, return_fea, xyz) 
 
         return data_tuple
 
@@ -113,6 +113,7 @@ def collate_fn_BEV(data): # stack alone batch dimension
         'grid': grid_ind_stack,
         'pt_labs': point_label,
         'pt_fea': xyz,
+        'xyz': [d[5] for d in data]
     }
 
 def build_dataloader(filenames, dataset_base, scene_size, grid_size=[480, 360, 32], n_classes=2, batch_size=2, keep_road=False):
@@ -122,7 +123,7 @@ def build_dataloader(filenames, dataset_base, scene_size, grid_size=[480, 360, 3
         dataset = s_dataset,
         batch_size = batch_size,
         collate_fn = collate_fn_BEV,
-        shuffle=True,
+        shuffle=False,
     )
 
     return train_dataset_loader
