@@ -7,7 +7,6 @@ from dgl.nn import SAGEConv
 import dgl
 import numpy as np
 from torch.nn.functional import normalize
-from torch.autograd import Variable
 
 
 def conv3x3x3(in_planes, out_planes, stride=1):
@@ -32,9 +31,9 @@ class SPConvnet(nn.Module):
         
         result = self.net(x).dense()
         indices = indices.long()
-        feats = Variable(result[indices[:, 0], :, indices[:, 1], indices[:, 2], indices[:, 3]])
-        labels = Variable(cluster_labels.repeat((32, 1)).T)
-        out = Variable(torch.zeros_like(feats))
+        feats = result[indices[:, 0], :, indices[:, 1], indices[:, 2], indices[:, 3]]
+        labels = cluster_labels.repeat((32, 1)).T
+        out = torch.zeros_like(feats)
         out = scatter_mean(feats, labels.to(torch.int64), out=out, dim=0)[:labels.max() + 1, :]
         
         return out
@@ -50,21 +49,6 @@ class EdgeNet(nn.Module):
             nn.Linear(32, 2),
             nn.Softmax(dim=-1),
         )
-    
-    def get_edge_features(self, cluster_features, cluster_centroids):
-        cos_similarity = lambda a, b: (a * b) / (torch.norm(a) * torch.norm(b))
-        n_nodes, features_shape = cluster_features.shape
-        n_edges = (n_nodes ** 2 - n_nodes) // 2
-        edge_features = torch.zeros(n_edges, features_shape + 3)
-        n_edge = 0
-        for i in range(cluster_features.shape[0]):
-            for j in range(cluster_features.shape[0]):
-                if i >= j:
-                    continue
-                edge_features[n_edge] = torch.cat((cos_similarity(cluster_features[i], cluster_features[j]),
-                                    torch.abs(cluster_centroids[i]-cluster_centroids[j])))
-                n_edge += 1
-        return edge_features
 
     def pyramid_index(self, tensor):
         n = tensor.shape[0]
@@ -113,13 +97,6 @@ class EdgeNet(nn.Module):
         x = self.conv2(graph, x)
         
         edge_features = self.get_concat_features(x)
-        # edge_features = torch.zeros(n_edges, 64).cuda()
-        # n_edge = 0
-        # for i in range(n_clusters):
-        #     for j in range(n_clusters):
-        #         if i < j:
-        #             edge_features[n_edge] = torch.cat((x[i], x[j]))
-        #             n_edge += 1
         x = self.mlps(edge_features)
         
         return x
