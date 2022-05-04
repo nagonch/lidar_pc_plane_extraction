@@ -1,7 +1,7 @@
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"
-from .model import GPS3Net
-from .utils import get_gt_edges, convert_to_net_data
+from model import GPS3Net
+from utils import get_gt_edges, convert_to_net_data
 import hdbscan
 from torch.nn import CrossEntropyLoss
 import torch
