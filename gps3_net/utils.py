@@ -4,6 +4,14 @@ from torch_scatter import scatter_mean
 import torch
 
 
+def pyramid_index(tensor):
+    n = tensor.shape[0]
+    index = torch.tril_indices(n, n)
+    index = index.T[index[0] != index[1]].T
+    result = tensor[index[0], index[1]]
+    
+    return result.numpy()
+
 def get_gt_edges(gt_labels, overseg_labels):
     c = overseg_labels
     n_clusters = c.max() + 1
@@ -26,15 +34,8 @@ def get_gt_edges(gt_labels, overseg_labels):
         for i, j in true_edge:
             l_edge[i][j] = 1
             l_edge[j][i] = 1
-    n_clusters = l_edge.shape[0]
-    edges = torch.zeros(((n_clusters ** 2 - n_clusters) // 2,))
-    n = 0
-    for i in range(n_clusters):
-        for j in range(n_clusters):
-            if i < j:
-                edges[n] = l_edge[i][j]
-                n += 1
-    return edges
+
+    return pyramid_index(l_edge)
 
 
 def convert_to_net_data(batch, clusterer, spatial_shape=[480, 360, 32]):
