@@ -47,7 +47,7 @@ class EdgeNet(nn.Module):
             nn.Linear(64, 32),
             nn.ReLU(),
             nn.Linear(32, 2),
-            nn.ReLU(),
+            nn.Softmax(dim=-1),
         )
 
     def pyramid_index(self, tensor):
@@ -115,7 +115,7 @@ class GPS3Net(nn.Module):
             cluster_features = self.spconvnet(features, indices, cluster_labels, spatial_shape)
             scores.append(self.edgenet(cluster_features, node_centroids))
         
-        return scores
+        return torch.cat(scores, axis=0)
 
 class GPS3Net_inference():
     def __init__(self):
