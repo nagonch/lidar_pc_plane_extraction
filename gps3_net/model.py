@@ -47,7 +47,7 @@ class EdgeNet(nn.Module):
             nn.Linear(128, 64),
             nn.ReLU(),
             nn.Linear(64, 2),
-            nn.Softmax(dim=-1),
+            nn.ReLU(),
         )
 
     def pyramid_index(self, tensor):
