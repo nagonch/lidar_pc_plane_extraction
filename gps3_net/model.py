@@ -42,11 +42,11 @@ class EdgeNet(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = SAGEConv(35, 64, 'mean').cuda()
-        self.conv2 = SAGEConv(67, 32, 'mean').cuda()
+        self.conv2 = SAGEConv(64, 64, 'mean').cuda()
         self.mlps = nn.Sequential(
-            nn.Linear(64, 32),
+            nn.Linear(128, 64),
             nn.ReLU(),
-            nn.Linear(32, 2),
+            nn.Linear(64, 2),
             nn.Softmax(dim=-1),
         )
 
@@ -94,8 +94,8 @@ class EdgeNet(nn.Module):
         graph = self.get_graph(n_clusters).to(torch.device('cuda:0'))
         n_edges = (n_clusters ** 2 - n_clusters) // 2
         x = self.conv1(graph, x, edge_weight=edge_weight)
+        x = torch.nn.functional.relu(x)
         edge_weight = self.embed_handcalc(x, centroids).cuda().to(torch.float32)
-        x = torch.cat((x, centroids), axis=1).double().to(torch.float32)
         x = self.conv2(graph, x, edge_weight=edge_weight)
         
         edge_features = self.get_concat_features(x)
