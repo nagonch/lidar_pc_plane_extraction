@@ -66,8 +66,7 @@ for step in range(N_STEPS):
                 wandb.log({
                     "pred_error": loss,
                 })
-                for item in loss:
-                    item.backward()
+                loss.backward()
                 optimizer.step()
                 torch.cuda.empty_cache()
             except RuntimeError as e:
