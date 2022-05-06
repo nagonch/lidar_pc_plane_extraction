@@ -18,12 +18,12 @@ from IPython.display import clear_output
 RUN_ID = datetime.fromtimestamp(time()).strftime("%d-%m-%Y--%H-%M")
 spatial_shape = [120, 90, 8]
 model_save_path = f'/mnt/vol0/datasets/plane_extraction_model_states/saved_models/{RUN_ID}.pth'
-model_load_path = '/mnt/vol0/datasets/plane_extraction_model_states/saved_models/31-03-2022--10-01.pth'
+model_load_path = '/mnt/vol0/datasets/plane_extraction_model_states/saved_models/05-05-2022--02-30.pth'
 
 train_data, val_data = get_karla_filepaths(0.7)
 train_dataloader = build_dataloader(train_data, KittiDataset, 50000, batch_size=1, grid_size=spatial_shape)
 
-clusterer = HDBSCAN(min_cluster_size=3)
+clusterer = HDBSCAN(min_cluster_size=10)
 N_STEPS = 150
 LR = 1e-3
 
@@ -31,7 +31,7 @@ model = GPS3Net().cuda()
 weights = torch.load(model_load_path)['model_state']
 model.load_state_dict(weights)
 
-optimizer = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=5e-4)
+optimizer = torch.optim.SGD(model.parameters(), lr=LR, weight_decay=5e-4)
 criterion = CrossEntropyLoss()
 scheduler = ExponentialLR(optimizer, 0.7)
 
@@ -61,9 +61,10 @@ for step in range(N_STEPS):
                 cluster_labels = [b[-1] for b in batch]
                 gt_labels = [b[-4] for b in batch]
                 gt_graphs = [get_gt_edges(gt, cl).cuda().long() for gt, cl in zip(gt_labels, cluster_labels)]
-                loss = [criterion(out, gt_graph) for out, gt_graph in zip(preds, gt_graphs)]
+                gt_graphs = torch.cat(gt_graphs)
+                loss = criterion(preds, gt_graphs)
                 wandb.log({
-                    "pred_error": torch.mean(torch.stack(loss)),
+                    "pred_error": loss,
                 })
                 for item in loss:
                     item.backward()
