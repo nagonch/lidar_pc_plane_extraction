@@ -58,16 +58,19 @@ class EdgeNet(nn.Module):
         
         return result
 
-    def embed_handcalc(self, features, centroids):
+    def embed_handcalc(self, features, centroids=None):
         n_obj, _ = features.shape
         lhs = features.repeat(n_obj, 1, 1)
         rhs = features.repeat(n_obj, 1, 1).permute(1, 0, 2)
         result = normalize(lhs, dim=-1) * normalize(rhs, dim=-1)
-        lhs = centroids.repeat(n_obj, 1, 1)
-        rhs = centroids.repeat(n_obj, 1, 1).permute(1, 0, 2)
-        centroids_dists = torch.abs(lhs - rhs)
+        if centroids is not None:
+            lhs = centroids.repeat(n_obj, 1, 1)
+            rhs = centroids.repeat(n_obj, 1, 1).permute(1, 0, 2)
+            centroids_dists = torch.abs(lhs - rhs)
 
-        return self.pyramid_index(torch.cat((result, centroids_dists), dim=-1))
+            return self.pyramid_index(torch.cat((result, centroids_dists), dim=-1))
+        else:
+            return self.pyramid_index(result)
 
     def get_concat_features(self, features):
         n_obj, _ = features.shape
@@ -95,7 +98,7 @@ class EdgeNet(nn.Module):
         n_edges = (n_clusters ** 2 - n_clusters) // 2
         x = self.conv1(graph, x, edge_weight=edge_weight)
         x = torch.nn.functional.relu(x)
-        edge_weight = self.embed_handcalc(x, centroids).cuda().to(torch.float32)
+        edge_weight = self.embed_handcalc(x).cuda().to(torch.float32)
         x = self.conv2(graph, x, edge_weight=edge_weight)
         
         edge_features = self.get_concat_features(x)
