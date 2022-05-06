@@ -10,7 +10,7 @@ def pyramid_index(tensor):
     index = index.T[index[0] != index[1]].T
     result = tensor[index[0], index[1]]
     
-    return result.numpy()
+    return result
 
 def get_gt_edges(gt_labels, overseg_labels):
     c = overseg_labels
