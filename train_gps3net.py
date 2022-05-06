@@ -79,12 +79,12 @@ for step in range(N_STEPS):
                 else:
                     raise e
 
-    scheduler.step(torch.mean(torch.stack(loss)))
+    # scheduler.step(loss)
     torch.save(
             {
                 'epoch': step,
                 'model_state': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
-                'loss': torch.mean(torch.stack(loss)),
+                'loss': loss,
             }, model_save_path.format(RUN_ID),
     )
