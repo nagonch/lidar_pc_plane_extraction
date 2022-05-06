@@ -6,6 +6,7 @@ import torch
 
 def pyramid_index(tensor):
     n = tensor.shape[0]
+    tensor = torch.Tensor(tensor)
     index = torch.tril_indices(n, n)
     index = index.T[index[0] != index[1]].T
     result = tensor[index[0], index[1]]
