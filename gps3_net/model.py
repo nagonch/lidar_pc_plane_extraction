@@ -95,6 +95,7 @@ class EdgeNet(nn.Module):
         n_edges = (n_clusters ** 2 - n_clusters) // 2
         x = self.conv1(graph, x, edge_weight=edge_weight)
         edge_weight = self.embed_handcalc(x, centroids).cuda().to(torch.float32)
+        x = torch.cat((x, centroids), axis=1).double().to(torch.float32)
         x = self.conv2(graph, x, edge_weight=edge_weight)
         
         edge_features = self.get_concat_features(x)
