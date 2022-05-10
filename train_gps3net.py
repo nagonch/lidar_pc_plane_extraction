@@ -8,7 +8,7 @@ from dataset import get_kitti_filepaths as get_karla_filepaths
 from ds_net.dataset import build_dataloader
 from dataset import KittiDataset
 from hdbscan import HDBSCAN
-from torch.optim.lr_scheduler import ExponentialLR, ReduceLROnPlateau
+from torch.optim.lr_scheduler import ExponentialLR, LambdaLR
 import wandb
 from datetime import datetime
 from time import time
@@ -21,9 +21,9 @@ model_save_path = f'/mnt/vol0/datasets/plane_extraction_model_states/saved_model
 model_load_path = '/mnt/vol0/datasets/plane_extraction_model_states/saved_models/05-05-2022--02-30.pth'
 
 train_data, val_data = get_karla_filepaths(0.7)
-train_dataloader = build_dataloader(train_data, KittiDataset, 50000, batch_size=1, grid_size=spatial_shape)
+train_dataloader = build_dataloader(train_data, KittiDataset, 50000, batch_size=8, grid_size=spatial_shape)
 
-clusterer = HDBSCAN(min_cluster_size=10)
+clusterer = HDBSCAN(min_cluster_size=4)
 N_STEPS = 150
 LR = 1e-3
 
@@ -31,9 +31,9 @@ model = GPS3Net().cuda()
 weights = torch.load(model_load_path)['model_state']
 model.load_state_dict(weights)
 
-optimizer = torch.optim.SGD(model.parameters(), lr=LR, weight_decay=5e-4)
+optimizer = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=5e-4)
 criterion = CrossEntropyLoss()
-scheduler = ExponentialLR(optimizer, 0.7)
+scheduler = LambdaLR(optimizer, lambda epoch: 0.9 ** epoch, verbose=True)
 
 wandb.init(project="train", entity="skoltech-plane-extraction")
 wandb.run.name = f'gps3_net--karla--{RUN_ID}'
@@ -79,7 +79,7 @@ for step in range(N_STEPS):
                 else:
                     raise e
 
-    # scheduler.step(loss)
+    scheduler.step(loss)
     torch.save(
             {
                 'epoch': step,
