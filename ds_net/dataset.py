@@ -123,7 +123,7 @@ def build_dataloader(filenames, dataset_base, scene_size, grid_size=[480, 360, 3
         dataset = s_dataset,
         batch_size = batch_size,
         collate_fn = collate_fn_BEV,
-        shuffle=False,
+        shuffle=True,
     )
 
     return train_dataset_loader
