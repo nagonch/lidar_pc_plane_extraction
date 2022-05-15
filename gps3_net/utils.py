@@ -68,3 +68,20 @@ def convert_to_net_data(batch, clusterer, spatial_shape=[480, 360, 32]):
                       gt_labels.cuda(), node_centroids.cuda(), batch['vox_coor'][i].cuda(),
                       cluster_labels.cuda()])  
     return result
+
+def create_mapping(index, preds):
+    ma = {}
+    for i, j in index[preds.argmax(-1) == 1]:
+        to = min(i, j).item()
+        from_ = max(i, j).item()
+        from_stored = ma.get(from_)
+        to_stored = ma.get(to)
+        if from_stored is not None and to_stored is not None:
+            continue
+        if from_stored is not None:
+            ma[to] = from_stored
+        elif to_stored is not None:
+            ma[from_] = to_stored
+        else:
+            ma[from_] = to
+    return ma
