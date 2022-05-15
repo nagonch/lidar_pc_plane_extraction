@@ -69,11 +69,11 @@ def convert_to_net_data(batch, clusterer, spatial_shape=[480, 360, 32]):
                       cluster_labels.cuda()])  
     return result
 
-def create_mapping(preds, n_nodes):
+def create_mapping(preds, n_nodes, conf_level=0.9999):
     index = torch.tril_indices(n_nodes, n_nodes)
     index = index.T[index[0] != index[1]]
     ma = {}
-    for i, j in index[preds.argmax(-1) == 1]:
+    for i, j in index[preds[:, 1] >= conf_level]:
         to = min(i, j).item()
         from_ = max(i, j).item()
         from_stored = ma.get(from_)
